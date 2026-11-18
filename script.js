@@ -72,6 +72,29 @@ for (const [name, value] of [['LinkedIn', portfolio.redes.linkedin], ['GitHub', 
   document.querySelector('#social-links').append(item);
 }
 
+const skillList = document.querySelector('#skill-list');
+for (const skill of portfolio.tecnologias ?? []) {
+  const item = element('li', 'skill');
+  const icon = element('span', 'skill-icon');
+  icon.setAttribute('aria-hidden', 'true');
+  if (skill.imagem) {
+    const image = element('img');
+    image.alt = '';
+    image.src = skill.imagem;
+    icon.append(image);
+  } else {
+    const mark = element('span', 'skill-mark', '</>');
+    mark.dataset.icon = skill.icone ?? '';
+    icon.append(mark);
+  }
+  const label = element('div');
+  label.append(element('strong', '', skill.nome), element('p', 'skill-category', skill.categoria));
+  if (skill.experiencia) label.append(element('p', 'skill-note', skill.experiencia));
+  item.append(icon, label);
+  skillList.append(item);
+}
+document.querySelector('#tecnologias').hidden = !skillList.children.length;
+
 function gallery(project, lazy = true) {
   const { imagens: images = [], titulo: title } = project;
   if (!images.length) return null;

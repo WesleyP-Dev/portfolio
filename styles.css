@@ -8,7 +8,7 @@
   --text: #f1f3e9;
   --muted: #b8c0b2;
   --line: #373f34;
-  --control-line: #666f62;
+  --control-line: #7e8979;
   --accent: #c4f467;
   --accent-hover: #d7fc99;
   --on-accent: #19220f;
@@ -27,7 +27,7 @@
   --text: #1e271b;
   --muted: #495547;
   --line: #c7d0bf;
-  --control-line: #777f70;
+  --control-line: #6e7668;
   --accent: #426522;
   --accent-hover: #33521a;
   --on-accent: #f5f8ea;
@@ -39,7 +39,7 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 1rem/1.6 var(--font); }
 body, .site-header, .project-section, .project-card, .site-footer, .filters, .button,
-.theme-toggle, .tags li, .social-links a, .social-links span, dialog {
+.theme-toggle, .tags li, .social-links a, .social-links span, .skill, .skill-icon, dialog {
   transition: background-color .35s ease, color .35s ease, border-color .35s ease;
 }
 
@@ -125,6 +125,22 @@ h2 { font-size: clamp(2.45rem, 4.3vw, 4rem); line-height: 1.03; letter-spacing: 
 .about-copy > p + p { margin-top: .65rem; color: var(--muted); }
 .social-links { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1.3rem 0 0; padding: 0; list-style: none; }
 .social-links span.button { color: var(--muted); }
+.skills { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 3fr; gap: 1.1rem 1.5rem; align-items: start; margin-top: 2rem; padding-top: 1.65rem; border-top: 1px solid var(--line); }
+.skills h3 { font-size: 1.35rem; letter-spacing: -.035em; }
+.skills h3 + p { color: var(--muted); font-size: .9rem; }
+.skill-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .55rem; margin: 0; padding: 0; list-style: none; }
+.skill { display: flex; align-items: flex-start; gap: .65rem; min-width: 0; padding: .7rem; background: var(--card); border: 1px solid var(--line); border-radius: .65rem; overflow-wrap: anywhere; }
+.skill-icon { display: grid; flex: 0 0 2.4rem; height: 2.4rem; place-items: center; color: var(--accent); background: var(--accent-soft); border-radius: .45rem; }
+.skill-icon img { width: 1.5rem; height: 1.5rem; object-fit: contain; }
+.skill-category, .skill-note { color: var(--muted); font-size: .875rem; line-height: 1.4; }
+.skill-note { margin-top: .35rem; }
+.skill-mark { font: 700 .75rem/1 var(--mono); }
+.skill-mark[data-icon='windows'], .skill-mark[data-icon='raspberry'], .skill-mark[data-icon='docker'] { position: relative; display: block; width: 1.4rem; height: 1.4rem; font-size: 0; }
+.skill-mark[data-icon='windows'] { background: linear-gradient(currentColor 0 0) 0 0 / 45% 45% no-repeat, linear-gradient(currentColor 0 0) 100% 0 / 45% 45% no-repeat, linear-gradient(currentColor 0 0) 0 100% / 45% 45% no-repeat, linear-gradient(currentColor 0 0) 100% 100% / 45% 45% no-repeat; }
+.skill-mark[data-icon='raspberry'] { background: radial-gradient(circle closest-side, currentColor 90%, transparent) .23rem .43rem / .51rem .51rem no-repeat, radial-gradient(circle closest-side, currentColor 90%, transparent) .67rem .43rem / .51rem .51rem no-repeat, radial-gradient(circle closest-side, currentColor 90%, transparent) .39rem .75rem / .62rem .62rem no-repeat; }
+.skill-mark[data-icon='raspberry']::before { content: ''; position: absolute; top: .08rem; left: .36rem; width: .7rem; height: .36rem; background: currentColor; border-radius: 80% 0 80% 0; transform: rotate(-20deg); }
+.skill-mark[data-icon='docker']::before { content: ''; position: absolute; left: .02rem; top: .72rem; width: 1.25rem; height: .46rem; border-radius: .09rem .07rem .65rem .8rem; background: currentColor; }
+.skill-mark[data-icon='docker']::after { content: ''; position: absolute; left: .2rem; top: .42rem; width: .26rem; height: .24rem; background: currentColor; box-shadow: .31rem 0, .62rem 0, .62rem -.29rem, .98rem -.08rem; }
 .site-footer { border-top: 1px solid var(--line); background: var(--surface); }
 .footer-layout { display: flex; justify-content: space-between; align-items: center; gap: 1rem; min-height: 5rem; }
 .footer-layout > a:last-child { color: var(--muted); padding-block: .65rem; text-decoration: underline; text-underline-offset: .2em; }
@@ -159,6 +175,7 @@ dialog .hero-actions:empty { display: none; }
   .section-heading { align-items: start; flex-direction: column; }
   .project-section, .about { padding-block: 2.65rem; }
   .about { grid-template-columns: 1fr; }
+  .skills { grid-template-columns: 1fr; margin-top: .85rem; }
 }
 
 @media (max-width: 500px) { .project-grid { grid-template-columns: 1fr; } }

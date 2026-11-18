@@ -9,6 +9,11 @@ const portfolio = {
     linkedin: '', // Ex.: https://www.linkedin.com/in/seu-perfil/
     github: '', // Ex.: https://github.com/seu-usuario
   },
+  tecnologias: [
+    { nome: 'Windows', categoria: 'Sistema operacional', icone: 'windows' },
+    { nome: 'Raspberry Pi OS', categoria: 'Sistema operacional', icone: 'raspberry' },
+    { nome: 'Docker', categoria: 'Containers', icone: 'docker' },
+  ],
   projetos: [
     {
       titulo: 'Rastreador de hábitos',
