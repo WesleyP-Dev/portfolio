@@ -294,6 +294,8 @@ editor.addEventListener('submit', async (event) => {
 if (!globalThis.portfolioCloud) {
   showStatus('O painel será habilitado depois de conectar o projeto ao Firebase e criar a conta de administração.');
 } else {
+  const testingLocally = globalThis.portfolioCloud.emulator === true && ['localhost', '127.0.0.1'].includes(location.hostname);
+  document.querySelector('#demo-notice').hidden = !testingLocally;
   import('./cloud.mjs').then(async (module) => {
     cloud = module;
     await cloud.observeSession(displaySession);

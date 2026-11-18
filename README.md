@@ -17,7 +17,19 @@ Abra **Administração** no rodapé. Após a configuração inicial, entre com s
 - **Galeria** aceita endereços públicos que abram imagens diretamente e um texto alternativo para cada uma. A partir da segunda imagem, aparecem os controles do carrossel.
 - **Tecnologias** permitem escolher os ícones disponíveis ou informar o endereço público de um ícone personalizado.
 
-### Configure sua conta uma única vez
+### Teste local sem conta no Firebase
+
+Com Node.js, Firebase CLI e Java 21 ou superior disponíveis, execute na raiz do projeto:
+
+```powershell
+node preview-admin.mjs
+```
+
+Abra `http://127.0.0.1:4175/admin.html` quando o endereço aparecer no terminal. Use o e-mail `teste@example.test` e a senha de teste `PortfolioTeste123!`. O script prepara uma cópia temporária do site, cria a conta fictícia e usa os emuladores locais de Hosting, Auth e Firestore. Na primeira execução, a CLI pode baixar o emulador do Firestore. O site carrega o SDK do Firebase pela internet.
+
+Use **Ver site** para conferir o que publicou. As alterações de teste são descartadas ao encerrar com `Ctrl+C`.
+
+### Configure sua conta de produção uma única vez
 
 1. Use um projeto Firebase dedicado ao portfólio. No console, registre um **app da Web**, crie o banco **Cloud Firestore** padrão em modo de produção e habilite **Authentication → Sign-in method → E-mail/senha**.
 2. Em **Authentication → Users**, crie sua conta com o e-mail e a senha que você escolher. Copie o **UID** exibido. A senha fica somente na conta do Firebase.
@@ -32,11 +44,11 @@ Use o servidor local ou a hospedagem para abrir o painel. Depois da configuraç�
 
 ## Versões no Git
 
-O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. A `v0.4.0` acrescenta a paleta azul. Use **Lilás**, **Verde** ou **Azul** no cabeçalho. O navegador guarda a escolha junto com a preferência de tema claro ou escuro.
+O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. A `v0.4.0` acrescenta a paleta azul. A `v0.5.0` acrescenta o teste local do painel. Use **Lilás**, **Verde** ou **Azul** no cabeçalho. O navegador guarda a escolha junto com a preferência de tema claro ou escuro.
 
 ```powershell
 git log --oneline --decorate
-git diff v0.3.0 v0.4.0
+git diff v0.4.0 v0.5.0
 git status --short
 ```
 
@@ -54,9 +66,9 @@ O Git guarda mudanças no código e no visual. O Firestore guarda o conteúdo pu
 git diff
 git add -- styles.css
 git commit -m "Atualiza o estilo do portfólio"
-git tag -a v0.5.0 -m "Novo estilo"
+git tag -a v0.6.0 -m "Novo estilo"
 git push
-git push origin v0.5.0
+git push origin v0.6.0
 ```
 
 ## Hospedagem
