@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Portfólio com projetos pessoais, trabalhos da faculdade e aprendizados de desenvolvimento.">
+  <meta name="color-scheme" content="dark light">
+  <title>Portfólio · Projetos e sobre mim</title>
+  <script>
+    try {
+      const theme = localStorage.getItem('portfolio-theme');
+      if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+    } catch { /* A página continua disponível sem armazenamento. */ }
+  </script>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./conteudo.js" defer></script>
+  <script src="./script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <header class="site-header">
+    <div class="shell header-layout">
+      <a class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true">✳</span> <span data-brand>Portfólio</span></a>
+      <nav class="main-nav" aria-label="Navegação principal">
+        <a href="#inicio" aria-current="location">Início</a>
+        <a href="#projetos">Projetos</a>
+        <a href="#sobre">Sobre mim</a>
+      </nav>
+      <button class="theme-toggle" type="button" aria-label="Ativar tema claro"><span class="theme-icon" aria-hidden="true"></span></button>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <section class="shell hero" id="inicio" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span aria-hidden="true"></span> PORTFÓLIO DE PROJETOS</p>
+        <h1 id="hero-title">Ideias em<br>construção<span>.</span></h1>
+        <p class="hero-intro" id="intro">Um espaço para reunir projetos pessoais, trabalhos da faculdade e o que aprendo construindo cada um deles.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#projetos">Explorar projetos</a>
+          <a class="button secondary" href="#sobre">Sobre mim</a>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <img src="./assets/hero.webp" alt="" fetchpriority="high" width="1100" height="840">
+        <i class="corner corner-top"></i><i class="corner corner-bottom"></i>
+      </div>
+    </section>
+
+    <section class="project-section" id="projetos" aria-labelledby="project-title">
+      <div class="shell">
+        <div class="section-heading">
+          <div>
+            <h2 id="project-title">Projetos<span>.</span></h2>
+            <p id="project-intro">Uma seleção demonstrativa de projetos pessoais e acadêmicos.</p>
+          </div>
+          <div class="filters" role="group" aria-label="Filtrar por categoria">
+            <button type="button" data-filter="todos" aria-pressed="true" aria-controls="project-grid">Todos</button>
+            <button type="button" data-filter="pessoal" aria-pressed="false" aria-controls="project-grid">Pessoais</button>
+            <button type="button" data-filter="faculdade" aria-pressed="false" aria-controls="project-grid">Faculdade</button>
+          </div>
+        </div>
+        <p id="filter-status" class="visually-hidden" role="status"></p>
+        <div class="project-grid" id="project-grid"></div>
+        <p id="no-projects" hidden>Nenhum projeto nesta categoria.</p>
+        <noscript>Ative o JavaScript para ver e filtrar os projetos.</noscript>
+      </div>
+    </section>
+
+    <section class="shell about" id="sobre" aria-labelledby="about-title">
+      <div>
+        <p class="eyebrow"><span aria-hidden="true"></span> OI, PRAZER!</p>
+        <h2 id="about-title">Sobre mim<span>.</span></h2>
+      </div>
+      <div class="about-copy">
+        <p class="about-lead" id="about-lead">Este é o meu espaço para compartilhar o que construo e aprendo.</p>
+        <p id="about-description">Aqui entram um pouco da minha trajetória, o que estou estudando e os tipos de projeto que quero desenvolver.</p>
+        <ul class="social-links" id="social-links" aria-label="Redes profissionais"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-layout">
+      <a class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true">✳</span> <span data-brand>Portfólio</span></a>
+      <a href="#inicio">Voltar ao início</a>
+    </div>
+  </footer>
+
+  <dialog id="project-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-inner">
+      <div class="dialog-heading">
+        <p id="dialog-category" class="category"></p>
+        <form method="dialog"><button class="icon-button close-button" type="submit" aria-label="Fechar detalhes" autofocus>×</button></form>
+      </div>
+      <h2 id="dialog-title"></h2>
+      <div id="dialog-gallery"></div>
+      <p id="dialog-description"></p>
+      <ul id="dialog-tags" class="tags" aria-label="Tecnologias"></ul>
+      <div id="dialog-links" class="hero-actions"></div>
+    </div>
+  </dialog>
+</body>
+</html>
