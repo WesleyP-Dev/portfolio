@@ -32,11 +32,11 @@ Use o servidor local ou a hospedagem para abrir o painel. Depois da configuraç�
 
 ## Versões no Git
 
-O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. Use **Lilás** ou **Verde** no cabeçalho para trocar o visual na versão atual. O navegador guarda a escolha junto com a preferência de tema claro ou escuro.
+O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. A `v0.4.0` acrescenta a paleta azul. Use **Lilás**, **Verde** ou **Azul** no cabeçalho. O navegador guarda a escolha junto com a preferência de tema claro ou escuro.
 
 ```powershell
 git log --oneline --decorate
-git diff v0.2.0 v0.3.0
+git diff v0.3.0 v0.4.0
 git status --short
 ```
 
@@ -54,9 +54,9 @@ O Git guarda mudanças no código e no visual. O Firestore guarda o conteúdo pu
 git diff
 git add -- styles.css
 git commit -m "Atualiza o estilo do portfólio"
-git tag -a v0.4.0 -m "Novo estilo"
+git tag -a v0.5.0 -m "Novo estilo"
 git push
-git push origin v0.4.0
+git push origin v0.5.0
 ```
 
 ## Hospedagem

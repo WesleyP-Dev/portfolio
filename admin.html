@@ -10,7 +10,7 @@
       const theme = localStorage.getItem('portfolio-theme');
       const palette = localStorage.getItem('portfolio-palette');
       if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
-      if (palette === 'lilas' || palette === 'verde') document.documentElement.dataset.palette = palette;
+      if (['lilas', 'verde', 'azul'].includes(palette)) document.documentElement.dataset.palette = palette;
     } catch { /* A página continua disponível sem armazenamento. */ }
   </script>
   <link rel="stylesheet" href="./styles.css">
