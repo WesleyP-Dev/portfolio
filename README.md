@@ -8,22 +8,35 @@ python -m http.server 8000 --bind 127.0.0.1
 
 Abra `http://127.0.0.1:8000/` no navegador. Use `Ctrl+C` no terminal para encerrar o servidor.
 
-## Personalize em `conteudo.js`
+## Administração
 
-- Preencha `nome`, `introducao` e `sobre` com seus dados.
-- Cole os endereços completos dos seus perfis em `redes.linkedin` e `redes.github`. O site ativa cada link quando o respectivo endereço é preenchido.
-- Substitua os projetos de exemplo por projetos reais. Use `categoria: 'pessoal'` ou `categoria: 'faculdade'`, escreva um `resumo` curto e conte o que você fez em `descricao`. Defina `demonstracao: false` para seus projetos reais.
-- Coloque as imagens em `assets/` e adicione entradas `{ src: './assets/arquivo.webp', alt: 'Descrição da imagem' }` em `imagens`. Duas ou mais imagens ativam o carrossel. Use `[]` para exibir um projeto sem imagens.
-- Preencha `repositorio` e `demo` quando tiver links públicos para o código e a demonstração. Esses links aparecem em **Ver detalhes**.
-- Em `tecnologias`, acrescente linguagens, bibliotecas, hardware, sistemas ou ferramentas. Use `categoria` para indicar o tipo e preencha `experiencia` com uma aplicação concreta, como `Usei para criar um ambiente local do projeto X`. Para novos ícones, use `imagem: './assets/meu-icone.png'`. Sem uma imagem ou um `icone` conhecido, o cartão exibe um símbolo genérico.
+Abra **Administração** no rodapé. Após a configuração inicial, entre com seu e-mail e senha para editar a apresentação, a bio, os perfis, o currículo, os projetos e as tecnologias. **Publicar alterações** salva o conteúdo compartilhado no Firestore e o torna visível para visitantes. O site começa com os exemplos de `conteudo.js`.
+
+- **Currículo** aceita um link público para o PDF ou a página do currículo e aparece em **Sobre mim**.
+- **Repositório no GitHub** aceita o endereço do repositório do projeto. O link aparece direto no cartão e dentro dos detalhes.
+- **Galeria** aceita endereços públicos que abram imagens diretamente e um texto alternativo para cada uma. A partir da segunda imagem, aparecem os controles do carrossel.
+- **Tecnologias** permitem escolher os ícones disponíveis ou informar o endereço público de um ícone personalizado.
+
+### Configure sua conta uma única vez
+
+1. Use um projeto Firebase dedicado ao portfólio. No console, registre um **app da Web**, crie o banco **Cloud Firestore** padrão em modo de produção e habilite **Authentication → Sign-in method → E-mail/senha**.
+2. Em **Authentication → Users**, crie sua conta com o e-mail e a senha que você escolher. Copie o **UID** exibido. A senha fica somente na conta do Firebase.
+3. Em `firebase-config.js`, substitua `null` pelo objeto do exemplo. Em `firebase`, cole a configuração pública do app Web. Em `ownerUid`, informe o UID copiado. Em `firestore.rules`, troque `CONFIGURE_OWNER_UID` pelo mesmo UID. O Firestore só permite publicar com essa conta.
+4. Com a Firebase CLI instalada, autentique-se com `firebase login` e publique as regras a partir da raiz do projeto. Substitua `ID-DO-PROJETO` pelo identificador do projeto Firebase.
+
+```powershell
+firebase deploy --only firestore:rules --project ID-DO-PROJETO
+```
+
+Use o servidor local ou a hospedagem para abrir o painel. Depois da configuração, as edições de conteúdo são feitas no formulário. [Configuração do app Web](https://firebase.google.com/docs/web/setup) · [Login com e-mail e senha](https://firebase.google.com/docs/auth/web/password-auth) · [Regras do Firestore](https://firebase.google.com/docs/firestore/security/rules-conditions).
 
 ## Versões no Git
 
-O histórico local começa em `v0.1.0` com a base do portfólio e `v0.2.0` com a seção de tecnologias e o guia de publicação. Os commits guardam as mudanças na mesma pasta.
+O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. Use **Lilás** ou **Verde** no cabeçalho para trocar o visual na versão atual. O navegador guarda a escolha junto com a preferência de tema claro ou escuro.
 
 ```powershell
 git log --oneline --decorate
-git diff v0.1.0 v0.2.0
+git diff v0.2.0 v0.3.0
 git status --short
 ```
 
@@ -35,31 +48,29 @@ git push -u origin main
 git push origin --tags
 ```
 
-Para registrar uma mudança posterior de conteúdo, revise o diff, adicione os arquivos alterados e faça um commit. Você pode marcar uma nova versão quando fechar um conjunto de mudanças.
+O Git guarda mudanças no código e no visual. O Firestore guarda o conteúdo publicado pelo painel. Para uma futura mudança de código, revise o diff, adicione os arquivos alterados e faça um commit. Crie uma tag quando quiser marcar uma versão.
 
 ```powershell
 git diff
-git add -- conteudo.js assets
-git commit -m "Atualiza os projetos do portfólio"
-git tag -a v0.3.0 -m "Novos projetos"
+git add -- styles.css
+git commit -m "Atualiza o estilo do portfólio"
+git tag -a v0.4.0 -m "Novo estilo"
 git push
-git push origin v0.3.0
+git push origin v0.4.0
 ```
 
 ## Hospedagem
 
-**GitHub Pages.** No GitHub, abra **Settings → Pages**. Selecione **Deploy from a branch**, escolha `main` e `/(root)` e salve. Os caminhos dos arquivos são relativos e funcionam no subdiretório de um repositório. [Guia oficial do GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
+**GitHub Pages.** No GitHub, abra **Settings → Pages**. Selecione **Deploy from a branch**, escolha `main` e `/(root)` e salve. O site público também pode usar o Firebase para login e conteúdo com a configuração acima. [Guia oficial do GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
 
-**Google Cloud com Firebase Hosting.** Crie um projeto Firebase ou adicione Firebase ao seu projeto do Google Cloud. Com a Firebase CLI instalada e autenticada, prepare uma pasta de publicação a partir da raiz do projeto.
+**Google Cloud com Firebase Hosting.** Depois da configuração da conta, prepare e publique os arquivos estáticos no mesmo projeto Firebase. Se o projeto ainda não tiver um site padrão, a CLI pode solicitar sua criação.
 
 ```powershell
-New-Item -ItemType Directory -Force public | Out-Null
-Copy-Item -Path index.html,styles.css,conteudo.js,script.js -Destination public -Force
-Copy-Item -Path assets -Destination public -Recurse -Force
-firebase init hosting
+node prepare-hosting.mjs
+firebase deploy --only hosting,firestore:rules --project ID-DO-PROJETO
 ```
 
-Selecione o projeto, informe `public` como diretório público, responda **Não** à configuração de aplicativo de página única, preserve seu `index.html` e deixe a integração automática com GitHub para quando quiser configurá-la. Caso a CLI solicite, crie o site padrão do Hosting. Execute `firebase deploy --only hosting` para publicar. Atualize a pasta `public` a cada publicação em que alterar os arquivos do site. [Guia do Firebase Hosting](https://firebase.google.com/docs/hosting/quickstart) e [criação do site padrão](https://firebase.google.com/docs/hosting/default-site).
+Repita a preparação e o deploy quando alterar código ou o visual. Para mudanças feitas pelo painel, basta usar **Publicar alterações**. [Guia do Firebase Hosting](https://firebase.google.com/docs/hosting/quickstart) · [Criação do site padrão](https://firebase.google.com/docs/hosting/default-site).
 
 ## Imagens
 

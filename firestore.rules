@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner() {
+      return request.auth != null && request.auth.uid == 'CONFIGURE_OWNER_UID';
+    }
+
+    function validPortfolio() {
+      let doc = request.resource.data;
+      let content = doc.content;
+      return doc.keys().hasOnly(['content', 'revision'])
+        && doc.revision is int
+        && content is map
+        && content.keys().hasOnly(['nome', 'introducao', 'sobre', 'redes', 'curriculo', 'tecnologias', 'projetos'])
+        && content.nome is string && content.introducao is string && content.curriculo is string
+        && content.sobre is map && content.sobre.titulo is string && content.sobre.descricao is string
+        && content.redes is map && content.redes.linkedin is string && content.redes.github is string
+        && content.tecnologias is list && content.tecnologias.size() <= 80
+        && content.projetos is list && content.projetos.size() <= 80;
+    }
+
+    match /publico/portfolio {
+      allow get: if true;
+      allow create: if owner() && validPortfolio() && request.resource.data.revision == 1;
+      allow update: if owner() && validPortfolio() && request.resource.data.revision == resource.data.revision + 1;
+    }
+  }
+}

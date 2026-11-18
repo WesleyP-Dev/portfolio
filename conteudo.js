@@ -1,6 +1,7 @@
 const portfolio = {
   nome: '',
   introducao: 'Um espaço para reunir projetos pessoais, trabalhos da faculdade e o que aprendo construindo cada um deles.',
+  curriculo: '',
   sobre: {
     titulo: 'Este é o meu espaço para compartilhar o que construo e aprendo.',
     descricao: 'Aqui entram um pouco da minha trajetória, o que estou estudando e os tipos de projeto que quero desenvolver.',

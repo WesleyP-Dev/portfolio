@@ -1,5 +1,6 @@
 const root = document.documentElement;
 const themeButton = document.querySelector('.theme-toggle');
+const paletteButtons = [...document.querySelectorAll('[data-palette-option]')];
 const filters = [...document.querySelectorAll('[data-filter]')];
 const grid = document.querySelector('#project-grid');
 const dialog = document.querySelector('#project-dialog');
@@ -10,16 +11,6 @@ function element(tag, className, content) {
   if (className) node.className = className;
   if (content) node.textContent = content;
   return node;
-}
-
-function webUrl(value) {
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    return ['http:', 'https:'].includes(url.protocol) ? url.href : null;
-  } catch {
-    return null;
-  }
 }
 
 function link(label, url) {
@@ -43,6 +34,23 @@ themeButton.addEventListener('click', () => {
   } catch { /* A preferência ainda vale nesta página. */ }
 });
 
+function updatePaletteButton() {
+  for (const button of paletteButtons) {
+    button.setAttribute('aria-pressed', String(root.dataset.palette === button.dataset.paletteOption));
+  }
+}
+
+updatePaletteButton();
+for (const button of paletteButtons) {
+  button.addEventListener('click', () => {
+    root.dataset.palette = button.dataset.paletteOption;
+    updatePaletteButton();
+    try {
+      localStorage.setItem('portfolio-palette', root.dataset.palette);
+    } catch { /* A preferência ainda vale nesta página. */ }
+  });
+}
+
 function updateNavigation() {
   const hash = location.hash || '#inicio';
   for (const item of document.querySelectorAll('.main-nav a')) {
@@ -54,33 +62,15 @@ function updateNavigation() {
 window.addEventListener('hashchange', updateNavigation);
 updateNavigation();
 
-for (const brand of document.querySelectorAll('[data-brand]')) {
-  if (portfolio.nome.trim()) brand.textContent = portfolio.nome;
-}
-if (portfolio.nome.trim()) document.title = `${portfolio.nome} · Portfólio`;
-document.querySelector('#intro').textContent = portfolio.introducao;
-document.querySelector('#about-lead').textContent = portfolio.sobre.titulo;
-document.querySelector('#about-description').textContent = portfolio.sobre.descricao;
-if (!portfolio.projetos.some((project) => project.demonstracao)) {
-  document.querySelector('#project-intro').textContent = 'Projetos pessoais e trabalhos da faculdade.';
-}
-
-for (const [name, value] of [['LinkedIn', portfolio.redes.linkedin], ['GitHub', portfolio.redes.github]]) {
-  const item = element('li');
-  const url = webUrl(value);
-  item.append(url ? link(name, url) : element('span', 'button secondary', `${name} · a adicionar`));
-  document.querySelector('#social-links').append(item);
-}
-
-const skillList = document.querySelector('#skill-list');
-for (const skill of portfolio.tecnologias ?? []) {
+function skillCard(skill) {
   const item = element('li', 'skill');
   const icon = element('span', 'skill-icon');
   icon.setAttribute('aria-hidden', 'true');
-  if (skill.imagem) {
+  const customIcon = imageUrl(skill.imagem);
+  if (customIcon) {
     const image = element('img');
     image.alt = '';
-    image.src = skill.imagem;
+    image.src = customIcon;
     icon.append(image);
   } else {
     const mark = element('span', 'skill-mark', '</>');
@@ -91,12 +81,12 @@ for (const skill of portfolio.tecnologias ?? []) {
   label.append(element('strong', '', skill.nome), element('p', 'skill-category', skill.categoria));
   if (skill.experiencia) label.append(element('p', 'skill-note', skill.experiencia));
   item.append(icon, label);
-  skillList.append(item);
+  return item;
 }
-document.querySelector('#tecnologias').hidden = !skillList.children.length;
 
 function gallery(project, lazy = true) {
-  const { imagens: images = [], titulo: title } = project;
+  const { imagens = [], titulo: title } = project;
+  const images = imagens.filter((image) => imageUrl(image.src));
   if (!images.length) return null;
 
   const figure = element('figure', 'gallery');
@@ -116,7 +106,7 @@ function gallery(project, lazy = true) {
   function showImage(announce = false) {
     const { src, alt } = images[current];
     image.alt = alt;
-    image.src = src;
+    image.src = imageUrl(src);
     count.textContent = `${current + 1}/${images.length}`;
     if (announce) status.textContent = `Imagem ${current + 1} de ${images.length}. ${alt}`;
   }
@@ -169,10 +159,10 @@ function openProject(project) {
   tagList.hidden = !tags.length;
 
   const links = [];
-  for (const [label, value] of [['Ver repositório', project.repositorio], ['Abrir demonstração', project.demo]]) {
-    const url = webUrl(value);
-    if (url) links.push(link(label, url));
-  }
+  const repository = githubUrl(project.repositorio);
+  const demo = webUrl(project.demo);
+  if (repository) links.push(link('Abrir no GitHub', repository));
+  if (demo) links.push(link('Abrir demonstração', demo));
   document.querySelector('#dialog-links').replaceChildren(...links);
   dialog.showModal();
 }
@@ -203,18 +193,25 @@ function projectCard(project) {
   plus.setAttribute('aria-hidden', 'true');
   details.append(plus);
   details.addEventListener('click', () => openProject(project));
-  content.append(details);
+  const actions = element('div', 'card-actions');
+  actions.append(details);
+  const repository = githubUrl(project.repositorio);
+  if (repository) {
+    const source = element('a', 'details', 'GitHub');
+    source.href = repository;
+    source.setAttribute('aria-label', `Abrir ${project.titulo} no GitHub`);
+    actions.append(source);
+  }
+  content.append(actions);
   card.append(content);
   return card;
 }
 
-const cards = portfolio.projetos.map((project) => {
-  const card = projectCard(project);
-  grid.append(card);
-  return { category: project.categoria, card };
-});
+let cards = [];
+let activeFilter = filters[0];
 
 function selectFilter(selected, announce = true) {
+  activeFilter = selected;
   const category = selected.dataset.filter;
   filters.forEach((filter) => filter.setAttribute('aria-pressed', String(filter === selected)));
   let count = 0;
@@ -229,5 +226,40 @@ function selectFilter(selected, announce = true) {
   }
 }
 
+function renderPortfolio(content) {
+  const name = content.nome.trim();
+  for (const brand of document.querySelectorAll('[data-brand]')) brand.textContent = name || 'Portfólio';
+  document.title = name ? `${name} · Portfólio` : 'Portfólio · Projetos e sobre mim';
+  document.querySelector('#intro').textContent = content.introducao;
+  document.querySelector('#about-lead').textContent = content.sobre.titulo;
+  document.querySelector('#about-description').textContent = content.sobre.descricao;
+  document.querySelector('#project-intro').textContent = content.projetos.some((project) => project.demonstracao)
+    ? 'Uma seleção demonstrativa de projetos pessoais e acadêmicos.'
+    : 'Projetos pessoais e trabalhos da faculdade.';
+
+  const social = [['LinkedIn', content.redes.linkedin], ['GitHub', content.redes.github], ['Currículo', content.curriculo]];
+  document.querySelector('#social-links').replaceChildren(...social.map(([label, value]) => {
+    const item = element('li');
+    const url = webUrl(value);
+    item.append(url ? link(label, url) : element('span', 'button secondary', `${label} · a adicionar`));
+    return item;
+  }));
+
+  const skillList = document.querySelector('#skill-list');
+  skillList.replaceChildren(...(content.tecnologias ?? []).map(skillCard));
+  document.querySelector('#tecnologias').hidden = !skillList.children.length;
+
+  cards = content.projetos.map((project) => ({ category: project.categoria, card: projectCard(project) }));
+  grid.replaceChildren(...cards.map(({ card }) => card));
+  selectFilter(activeFilter, false);
+}
+
 for (const filter of filters) filter.addEventListener('click', () => selectFilter(filter));
-selectFilter(filters[0], false);
+renderPortfolio(portfolio);
+
+if (globalThis.portfolioCloud) {
+  import('./cloud.mjs')
+    .then(({ readPortfolio }) => readPortfolio())
+    .then(({ content }) => { if (content) renderPortfolio(content); })
+    .catch((error) => console.error('Falha ao carregar o perfil publicado.', error));
+}

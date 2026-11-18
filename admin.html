@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark" data-palette="lilas">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Administração · Portfólio</title>
+  <script>
+    try {
+      const theme = localStorage.getItem('portfolio-theme');
+      const palette = localStorage.getItem('portfolio-palette');
+      if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      if (palette === 'lilas' || palette === 'verde') document.documentElement.dataset.palette = palette;
+    } catch { /* A página continua disponível sem armazenamento. */ }
+  </script>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./admin.css">
+  <script src="./conteudo.js" defer></script>
+  <script src="./firebase-config.js" defer></script>
+  <script src="./links.js" defer></script>
+  <script src="./admin.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#admin-main">Pular para o conteúdo</a>
+  <header class="site-header">
+    <div class="shell admin-header">
+      <a class="brand" href="./index.html"><span aria-hidden="true" class="brand-mark">✳</span> Portfólio</a>
+      <div class="admin-actions">
+        <a class="button secondary" href="./index.html">Ver site</a>
+        <button class="button secondary" type="button" id="sign-out" hidden>Sair</button>
+      </div>
+    </div>
+  </header>
+  <main class="shell admin-main" id="admin-main">
+    <h1>Administração<span>.</span></h1>
+    <p id="admin-status" role="status" aria-live="polite">Verificando acesso…</p>
+    <p id="admin-error" class="admin-error" role="alert"></p>
+    <noscript>Ative o JavaScript para entrar no painel.</noscript>
+
+    <form class="admin-panel login-form" id="login-form" method="post" hidden>
+      <label>E-mail <input id="email" type="email" autocomplete="username" required></label>
+      <label>Senha <input id="password" type="password" autocomplete="current-password" required></label>
+      <button class="button primary" type="submit" id="login-button" disabled>Entrar</button>
+    </form>
+
+    <form id="editor" hidden>
+      <fieldset id="editor-fields" class="editor-fields">
+        <section class="admin-panel" aria-labelledby="profile-heading">
+          <h2 id="profile-heading">Perfil e links</h2>
+          <div class="field-grid">
+            <label>Nome <input name="nome" maxlength="120"></label>
+            <label>Apresentação <input name="introducao" required maxlength="300"></label>
+            <label>Título da bio <input name="titulo" required maxlength="220"></label>
+            <label class="full-field">Sobre mim <textarea name="descricao" required maxlength="6000" rows="4"></textarea></label>
+            <label>LinkedIn <input name="linkedin" type="url" maxlength="500" placeholder="https://www.linkedin.com/in/…"></label>
+            <label>Perfil no GitHub <input name="github" type="url" maxlength="500" placeholder="https://github.com/…"></label>
+            <label class="full-field">Currículo <input name="curriculo" type="url" maxlength="500" placeholder="https://…" aria-describedby="resume-help"></label>
+            <p class="full-field field-hint" id="resume-help">Cole o endereço público do PDF ou da página do seu currículo.</p>
+          </div>
+        </section>
+
+        <section class="admin-panel" aria-labelledby="projects-heading">
+          <div class="editor-heading"><h2 id="projects-heading">Projetos</h2><button class="button secondary" type="button" id="add-project">Adicionar projeto</button></div>
+          <div class="entry-list" id="project-editor"></div>
+        </section>
+
+        <section class="admin-panel" aria-labelledby="skills-heading">
+          <div class="editor-heading"><h2 id="skills-heading">Tecnologias</h2><button class="button secondary" type="button" id="add-skill">Adicionar tecnologia</button></div>
+          <div class="entry-list" id="skill-editor"></div>
+        </section>
+        <div class="publish-bar">
+          <p>As alterações ficam visíveis no portfólio ao publicar.</p>
+          <button class="button primary" type="submit">Publicar alterações</button>
+          <p id="publish-feedback" role="status"></p>
+        </div>
+      </fieldset>
+    </form>
+  </main>
+</body>
+</html>
