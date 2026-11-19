@@ -69,20 +69,33 @@ function removeEntry(root, fallback) {
 const projectAdd = document.querySelector('#add-project');
 const skillAdd = document.querySelector('#add-skill');
 const categories = [['pessoal', 'Pessoal'], ['faculdade', 'Faculdade']];
+const visibilities = [['', 'Sem selo'], ...Object.entries(projectVisibility)];
 const icons = [['', 'Genérico'], ['windows', 'Windows'], ['raspberry', 'Raspberry Pi OS'], ['docker', 'Docker']];
 
 function projectEntry(project = {}, open = false) {
   const { root, body, fields, actions, bindTitle } = entry(project.titulo, 'Novo projeto');
   root.open = open;
+  const visibility = field('visibilidade', 'Visibilidade do repositório', project.visibilidade, { choices: visibilities });
+  const repository = field('repositorio', 'Repositório no GitHub', project.repositorio, { type: 'url', limit: 500, placeholder: 'https://github.com/usuario/repositorio' });
+  const visibilitySelect = visibility.querySelector('select');
+  const repositoryInput = repository.querySelector('input');
+  function updateRepositoryField() {
+    repositoryInput.disabled = visibilitySelect.value === 'privado';
+    repository.hidden = repositoryInput.disabled;
+  }
+  visibilitySelect.addEventListener('change', updateRepositoryField);
+  updateRepositoryField();
   fields.append(
     field('titulo', 'Título do projeto', project.titulo, { required: true, limit: 120 }),
     field('categoria', 'Categoria', project.categoria ?? 'pessoal', { choices: categories }),
     field('resumo', 'Resumo do cartão', project.resumo, { required: true, full: true, limit: 320 }),
     field('descricao', 'Descrição completa', project.descricao, { rows: 4, full: true, limit: 6000 }),
     field('tecnologias', 'Tecnologias separadas por vírgula', project.tecnologias?.join(', '), { full: true, limit: 500 }),
-    field('repositorio', 'Repositório no GitHub', project.repositorio, { type: 'url', limit: 500, placeholder: 'https://github.com/usuario/repositorio' }),
+    visibility,
+    field('demonstracao', 'Marcar como projeto de exemplo', project.demonstracao, { type: 'checkbox' }),
+    node('p', 'field-hint full-field', 'O selo indica se o repositório é público ou privado. A descrição, as imagens e o link da demonstração ficam visíveis no portfólio.'),
+    repository,
     field('demo', 'Link da demonstração', project.demo, { type: 'url', limit: 500 }),
-    field('demonstracao', 'Marcar como projeto de exemplo', project.demonstracao, { type: 'checkbox', full: true }),
   );
   bindTitle(fields.querySelector('input'));
 
@@ -118,7 +131,8 @@ function skillEntry(skill = {}, open = false) {
   root.open = open;
   fields.append(
     field('nome', 'Nome da tecnologia', skill.nome, { required: true, limit: 120 }),
-    field('categoria', 'Categoria', skill.categoria, { required: true, limit: 100 }),
+    field('tipo', 'Tipo de tecnologia', skillType(skill), { choices: Object.entries(skillTypes) }),
+    field('categoria', 'Área ou especialidade (opcional)', skill.categoria, { limit: 100, placeholder: 'Ex.: Containers' }),
     field('experiencia', 'Como você usa', skill.experiencia, { rows: 3, full: true, limit: 700 }),
     field('icone', 'Ícone', skill.icone, { choices: icons }),
     field('imagem', 'Endereço de um ícone personalizado', skill.imagem, { limit: 500, placeholder: 'https://…' }),
@@ -165,10 +179,11 @@ function collectContent() {
   const value = (name, validator) => fieldValue(profile, name, validator);
   const projects = [...projectEditor.children].map((item) => {
     const get = (name, validator) => fieldValue(item, name, validator);
+    const visibility = get('visibilidade');
     return {
       titulo: get('titulo'), categoria: get('categoria'), resumo: get('resumo'), descricao: get('descricao'),
       tecnologias: get('tecnologias').split(',').map((text) => text.trim()).filter(Boolean),
-      repositorio: get('repositorio', githubUrl), demo: get('demo', webUrl),
+      visibilidade: visibility, repositorio: visibility === 'privado' ? '' : get('repositorio', githubUrl), demo: get('demo', webUrl),
       demonstracao: item.querySelector('[name="demonstracao"]').checked,
       imagens: [...item.querySelectorAll('.image-row')].map((row) => ({
         src: fieldValue(row, 'src', imageUrl), alt: fieldValue(row, 'alt'),
@@ -176,7 +191,7 @@ function collectContent() {
     };
   });
   const skills = [...skillEditor.children].map((item) => ({
-    nome: fieldValue(item, 'nome'), categoria: fieldValue(item, 'categoria'),
+    nome: fieldValue(item, 'nome'), tipo: fieldValue(item, 'tipo'), categoria: fieldValue(item, 'categoria'),
     experiencia: fieldValue(item, 'experiencia'), icone: fieldValue(item, 'icone'),
     imagem: fieldValue(item, 'imagem', imageUrl),
   }));

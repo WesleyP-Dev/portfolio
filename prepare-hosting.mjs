@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 const root = new URL('./', import.meta.url);
 const files = [
   'index.html', 'admin.html', 'styles.css', 'admin.css', 'conteudo.js', 'script.js', 'links.js',
-  'admin.js', 'firebase-config.js', 'cloud.mjs', 'assets',
+  'admin.js', 'firebase-config.js', 'cloud.mjs', 'catalogo.js', 'assets',
 ];
 
 export async function prepareHosting(output = new URL('public/', root)) {

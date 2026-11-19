@@ -78,7 +78,7 @@ function skillCard(skill) {
     icon.append(mark);
   }
   const label = element('div');
-  label.append(element('strong', '', skill.nome), element('p', 'skill-category', skill.categoria));
+  label.append(element('strong', '', skill.nome), element('p', 'skill-category', skill.categoria || skillTypes[skillType(skill)]));
   if (skill.experiencia) label.append(element('p', 'skill-note', skill.experiencia));
   item.append(icon, label);
   return item;
@@ -178,10 +178,21 @@ function technologyItems(project) {
   return (project.tecnologias ?? []).map((name) => element('li', '', name));
 }
 
+function projectBadges(project) {
+  const badges = [element('p', 'category', categories[project.categoria])];
+  if (project.demonstracao) badges.push(element('span', 'project-badge', 'Exemplo'));
+  if (Object.hasOwn(projectVisibility, project.visibilidade)) {
+    badges.push(element('span', 'project-badge', projectVisibility[project.visibilidade]));
+  }
+  return badges;
+}
+
+function projectRepository(project) {
+  return project.visibilidade === 'privado' ? null : githubUrl(project.repositorio);
+}
+
 function openProject(project) {
-  document.querySelector('#dialog-category').textContent = project.demonstracao
-    ? `${categories[project.categoria]} · Exemplo`
-    : categories[project.categoria];
+  document.querySelector('#dialog-category').replaceChildren(...projectBadges(project));
   document.querySelector('#dialog-title').textContent = project.titulo;
   document.querySelector('#dialog-description').textContent = project.descricao || project.resumo;
 
@@ -193,7 +204,7 @@ function openProject(project) {
   tagList.hidden = !tags.length;
 
   const links = [];
-  const repository = githubUrl(project.repositorio);
+  const repository = projectRepository(project);
   const demo = webUrl(project.demo);
   if (repository) links.push(link('Abrir no GitHub', repository));
   if (demo) links.push(link('Abrir demonstração', demo));
@@ -208,8 +219,7 @@ function projectCard(project) {
 
   const content = element('div', 'card-content');
   const meta = element('div', 'card-meta');
-  meta.append(element('p', 'category', categories[project.categoria]));
-  if (project.demonstracao) meta.append(element('p', 'sample', 'Exemplo'));
+  meta.append(...projectBadges(project));
   content.append(meta, element('h3', '', project.titulo), element('p', 'card-summary', project.resumo));
 
   const technologies = technologyItems(project);
@@ -229,7 +239,7 @@ function projectCard(project) {
   details.addEventListener('click', () => openProject(project));
   const actions = element('div', 'card-actions');
   actions.append(details);
-  const repository = githubUrl(project.repositorio);
+  const repository = projectRepository(project);
   if (repository) {
     const source = element('a', 'details', 'GitHub');
     source.href = repository;
@@ -248,7 +258,12 @@ const nextPage = document.querySelector('#next-project-page');
 const pageLabel = document.querySelector('#project-page-label');
 const projectStatus = document.querySelector('#project-status');
 const projectTitle = document.querySelector('#project-title');
+const skillFilter = document.querySelector('#skill-filter');
+const skillList = document.querySelector('#skill-list');
+const skillStatus = document.querySelector('#skill-status');
+const noSkills = document.querySelector('#no-skills');
 let entries = [];
+let skillEntries = [];
 let activeFilter = filters[0];
 let currentPage = 1;
 
@@ -291,6 +306,21 @@ function moveProjectPage(step) {
   projectTitle.scrollIntoView({ block: 'start' });
 }
 
+function filterSkills(announce = true) {
+  let count = 0;
+  for (const { type, card } of skillEntries) {
+    const visible = skillFilter.value === 'todos' || skillFilter.value === type;
+    card.hidden = !visible;
+    if (visible) count += 1;
+  }
+  noSkills.hidden = count > 0;
+  if (announce) skillStatus.textContent = count === 1 ? '1 tecnologia exibida.' : `${count} tecnologias exibidas.`;
+}
+
+skillFilter.add(new Option('Todas', 'todos'));
+for (const [type, label] of Object.entries(skillTypes)) skillFilter.add(new Option(label, type));
+skillFilter.addEventListener('change', () => filterSkills());
+
 function renderPortfolio(content) {
   const name = content.nome.trim();
   for (const brand of document.querySelectorAll('[data-brand]')) brand.textContent = name || 'Portfólio';
@@ -310,9 +340,10 @@ function renderPortfolio(content) {
     return item;
   }));
 
-  const skillList = document.querySelector('#skill-list');
-  skillList.replaceChildren(...(content.tecnologias ?? []).map(skillCard));
-  document.querySelector('#tecnologias').hidden = !skillList.children.length;
+  skillEntries = (content.tecnologias ?? []).map((skill) => ({ type: skillType(skill), card: skillCard(skill) }));
+  skillList.replaceChildren(...skillEntries.map(({ card }) => card));
+  document.querySelector('#tecnologias').hidden = !skillEntries.length;
+  filterSkills(false);
 
   entries = content.projetos.map((project) => ({ project, card: null }));
   renderProjectPage(false);

@@ -11,14 +11,15 @@ const portfolio = {
     github: '', // Ex.: https://github.com/seu-usuario
   },
   tecnologias: [
-    { nome: 'Windows', categoria: 'Sistema operacional', icone: 'windows' },
-    { nome: 'Raspberry Pi OS', categoria: 'Sistema operacional', icone: 'raspberry' },
-    { nome: 'Docker', categoria: 'Containers', icone: 'docker' },
+    { nome: 'Windows', tipo: 'sistema', categoria: 'Sistema operacional', icone: 'windows' },
+    { nome: 'Raspberry Pi OS', tipo: 'sistema', categoria: 'Sistema operacional', icone: 'raspberry' },
+    { nome: 'Docker', tipo: 'ferramenta', categoria: 'Containers', icone: 'docker' },
   ],
   projetos: [
     {
       titulo: 'Rastreador de hábitos',
       categoria: 'pessoal',
+      visibilidade: 'privado',
       demonstracao: true,
       resumo: 'Uma interface para registrar hábitos e acompanhar a frequência ao longo da semana.',
       descricao: 'Este conceito reúne um calendário de atividades e um painel semanal. A galeria mostra como a interface poderia exibir os registros do dia e a evolução de cada hábito.',

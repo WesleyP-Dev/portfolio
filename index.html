@@ -18,6 +18,7 @@
   <script src="./conteudo.js" defer></script>
   <script src="./firebase-config.js" defer></script>
   <script src="./links.js" defer></script>
+  <script src="./catalogo.js" defer></script>
   <script src="./script.js" defer></script>
 </head>
 <body>
@@ -97,7 +98,14 @@
           <h3 id="skills-title">Tecnologias</h3>
           <p>Conhecimentos e ferramentas</p>
         </div>
-        <ul class="skill-list" id="skill-list"></ul>
+        <div>
+          <label class="skill-filter">Filtrar por tipo
+            <select id="skill-filter" aria-controls="skill-list"></select>
+          </label>
+          <p id="skill-status" class="visually-hidden" role="status"></p>
+          <ul class="skill-list" id="skill-list"></ul>
+          <p id="no-skills" hidden>Nenhuma tecnologia deste tipo.</p>
+        </div>
       </section>
     </section>
   </main>
@@ -112,7 +120,7 @@
   <dialog id="project-dialog" aria-labelledby="dialog-title">
     <div class="dialog-inner">
       <div class="dialog-heading">
-        <p id="dialog-category" class="category"></p>
+        <div id="dialog-category" class="card-meta"></div>
         <form method="dialog"><button class="icon-button close-button" type="submit" aria-label="Fechar detalhes" autofocus>×</button></form>
       </div>
       <h2 id="dialog-title"></h2>
