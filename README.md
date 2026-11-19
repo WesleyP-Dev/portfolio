@@ -53,11 +53,11 @@ O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2
 
 ```powershell
 git log --oneline --decorate
-git diff v0.13.0 v0.14.0
+git diff v0.14.0 v0.15.0
 git status --short
 ```
 
-A `v0.13.0` dá ícones personalizados e animações aos selos de status. A `v0.14.0` adiciona certificados ao site e ao painel.
+A `v0.13.0` dá ícones personalizados e animações aos selos de status. A `v0.14.0` adiciona certificados ao site e ao painel. A `v0.15.0` adapta o layout a monitores ultrawide e amplia os controles de toque.
 
 Para enviar a primeira versão, crie um repositório vazio no GitHub e substitua `SEU-USUARIO` pelo seu usuário e `portfolio` pelo nome do repositório, se for diferente.
 
@@ -73,9 +73,9 @@ O Git guarda mudanças no código e no visual. O Firestore guarda o conteúdo pu
 git diff
 git add -- styles.css
 git commit -m "Atualiza o estilo do portfólio"
-git tag -a v0.15.0 -m "Novo estilo"
+git tag -a v0.16.0 -m "Novo estilo"
 git push
-git push origin v0.15.0
+git push origin v0.16.0
 ```
 
 ## Hospedagem
