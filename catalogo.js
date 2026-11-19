@@ -9,10 +9,10 @@ const skillTypes = {
 
 const projectVisibility = { publico: 'Público', privado: 'Privado' };
 const projectStages = {
-  andamento: { label: 'Em andamento', icon: '◷', description: 'O projeto está em desenvolvimento e ainda tem funcionalidades sendo implementadas.' },
-  beta: { label: 'Em beta', icon: 'β', description: 'O projeto está em fase de testes e pode receber ajustes antes da versão final.' },
-  parcial: { label: 'Parcialmente concluído', icon: '◐', description: 'Parte do escopo foi entregue e ainda há itens pendentes.' },
-  concluido: { label: 'Concluído', icon: '✓', description: 'O escopo previsto para o projeto foi entregue.' },
+  andamento: { label: 'Em andamento', description: 'O projeto está em desenvolvimento e ainda tem funcionalidades sendo implementadas.' },
+  beta: { label: 'Em beta', description: 'O projeto está em fase de testes e pode receber ajustes antes da versão final.' },
+  parcial: { label: 'Parcialmente concluído', description: 'Parte do escopo foi entregue e ainda há itens pendentes.' },
+  concluido: { label: 'Concluído', description: 'O escopo previsto para o projeto foi entregue.' },
 };
 
 function skillType(skill) {

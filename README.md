@@ -15,7 +15,7 @@ Abra **Administração** no rodapé. Após a configuração inicial, entre com s
 - **Currículo** aceita um link público para o PDF ou a página do currículo e aparece em **Sobre mim**.
 - **Repositório no GitHub** aceita o endereço do repositório do projeto. O link aparece direto no cartão e dentro dos detalhes.
 - **Visibilidade do repositório** permite exibir **Público** ou **Privado** no cartão e nos detalhes, junto com **Exemplo** quando marcado. Ao publicar como privado, o painel omite o endereço do GitHub. A apresentação do projeto continua pública.
-- **Status do projeto** exibe um símbolo e um rótulo no canto superior direito do cartão e nos detalhes. Passe o mouse sobre o selo para ler a explicação. Escolha **Em andamento**, **Em beta**, **Parcialmente concluído**, **Concluído** ou **Sem status**.
+- **Status do projeto** exibe um ícone e um rótulo no canto superior direito do cartão e nos detalhes. Os ícones têm animações curtas que respeitam a preferência por movimento reduzido. Passe o mouse sobre o selo para ler a explicação. Escolha **Em andamento**, **Em beta**, **Parcialmente concluído**, **Concluído** ou **Sem status**.
 - **Galeria** aceita endereços públicos que abram imagens diretamente e um texto alternativo para cada uma. A partir da segunda imagem, aparecem os controles do carrossel.
 - **Tecnologias** permitem escolher um tipo para o filtro público e, opcionalmente, detalhar a área ou especialidade. Escolha um ícone disponível, que acompanha as cores do tema, ou informe o endereço público de um ícone personalizado. A imagem personalizada mantém suas cores originais e usa a mesma moldura dos outros ícones.
 
@@ -52,9 +52,11 @@ O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2
 
 ```powershell
 git log --oneline --decorate
-git diff v0.11.0 v0.12.0
+git diff v0.12.0 v0.13.0
 git status --short
 ```
+
+A `v0.13.0` dá ícones personalizados e animações aos selos de status.
 
 Para enviar a primeira versão, crie um repositório vazio no GitHub e substitua `SEU-USUARIO` pelo seu usuário e `portfolio` pelo nome do repositório, se for diferente.
 
@@ -70,9 +72,9 @@ O Git guarda mudanças no código e no visual. O Firestore guarda o conteúdo pu
 git diff
 git add -- styles.css
 git commit -m "Atualiza o estilo do portfólio"
-git tag -a v0.13.0 -m "Novo estilo"
+git tag -a v0.14.0 -m "Novo estilo"
 git push
-git push origin v0.13.0
+git push origin v0.14.0
 ```
 
 ## Hospedagem

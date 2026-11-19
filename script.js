@@ -193,10 +193,11 @@ function projectRepository(project) {
 
 function projectStage(project) {
   if (!Object.hasOwn(projectStages, project.status)) return null;
-  const { label, icon, description } = projectStages[project.status];
+  const { label, description } = projectStages[project.status];
   const badge = element('span', 'project-stage');
+  badge.dataset.stage = project.status;
   badge.title = description;
-  const marker = element('span', 'project-stage-icon', icon);
+  const marker = element('span', 'project-stage-icon');
   marker.setAttribute('aria-hidden', 'true');
   badge.append(marker, element('span', '', label));
   return badge;
