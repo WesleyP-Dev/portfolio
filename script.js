@@ -241,23 +241,54 @@ function projectCard(project) {
   return card;
 }
 
-let cards = [];
+const projectsPerPage = 6;
+const pagination = document.querySelector('#project-pagination');
+const previousPage = document.querySelector('#previous-project-page');
+const nextPage = document.querySelector('#next-project-page');
+const pageLabel = document.querySelector('#project-page-label');
+const projectStatus = document.querySelector('#project-status');
+const projectTitle = document.querySelector('#project-title');
+let entries = [];
 let activeFilter = filters[0];
+let currentPage = 1;
 
-function selectFilter(selected, announce = true) {
-  activeFilter = selected;
-  const category = selected.dataset.filter;
-  filters.forEach((filter) => filter.setAttribute('aria-pressed', String(filter === selected)));
-  let count = 0;
-  for (const entry of cards) {
-    const visible = category === 'todos' || entry.category === category;
-    entry.card.hidden = !visible;
-    if (visible) count += 1;
-  }
+function renderProjectPage(announce = true) {
+  const category = activeFilter.dataset.filter;
+  const matching = category === 'todos' ? entries : entries.filter(({ project }) => project.categoria === category);
+  const count = matching.length;
+  const pageCount = Math.max(1, Math.ceil(count / projectsPerPage));
+  currentPage = Math.max(1, Math.min(currentPage, pageCount));
+
+  const start = (currentPage - 1) * projectsPerPage;
+  const end = Math.min(start + projectsPerPage, count);
+  const visible = matching.slice(start, end).map((entry) => (entry.card ??= projectCard(entry.project)));
+  grid.replaceChildren(...visible);
   document.querySelector('#no-projects').hidden = count > 0;
+
+  pagination.hidden = pageCount === 1;
+  previousPage.disabled = currentPage === 1;
+  nextPage.disabled = currentPage === pageCount;
+  pageLabel.textContent = `Página ${currentPage} de ${pageCount}`;
   if (announce) {
-    document.querySelector('#filter-status').textContent = count === 1 ? '1 projeto exibido.' : `${count} projetos exibidos.`;
+    projectStatus.textContent = pageCount > 1
+      ? `${pageLabel.textContent}. Projetos ${start + 1} a ${end} de ${count}.`
+      : count === 1 ? '1 projeto exibido.' : `${count} projetos exibidos.`;
   }
+}
+
+function selectFilter(selected) {
+  if (selected === activeFilter) return;
+  activeFilter = selected;
+  currentPage = 1;
+  filters.forEach((filter) => filter.setAttribute('aria-pressed', String(filter === selected)));
+  renderProjectPage();
+}
+
+function moveProjectPage(step) {
+  currentPage += step;
+  renderProjectPage();
+  projectTitle.focus({ preventScroll: true });
+  projectTitle.scrollIntoView({ block: 'start' });
 }
 
 function renderPortfolio(content) {
@@ -283,12 +314,13 @@ function renderPortfolio(content) {
   skillList.replaceChildren(...(content.tecnologias ?? []).map(skillCard));
   document.querySelector('#tecnologias').hidden = !skillList.children.length;
 
-  cards = content.projetos.map((project) => ({ category: project.categoria, card: projectCard(project) }));
-  grid.replaceChildren(...cards.map(({ card }) => card));
-  selectFilter(activeFilter, false);
+  entries = content.projetos.map((project) => ({ project, card: null }));
+  renderProjectPage(false);
 }
 
 for (const filter of filters) filter.addEventListener('click', () => selectFilter(filter));
+previousPage.addEventListener('click', () => moveProjectPage(-1));
+nextPage.addEventListener('click', () => moveProjectPage(1));
 renderPortfolio(portfolio);
 
 if (globalThis.portfolioCloud) {

@@ -61,7 +61,7 @@
       <div class="shell">
         <div class="section-heading">
           <div>
-            <h2 id="project-title">Projetos<span>.</span></h2>
+            <h2 id="project-title" tabindex="-1">Projetos<span>.</span></h2>
             <p id="project-intro">Uma seleção demonstrativa de projetos pessoais e acadêmicos.</p>
           </div>
           <div class="filters" role="group" aria-label="Filtrar por categoria">
@@ -70,9 +70,14 @@
             <button type="button" data-filter="faculdade" aria-pressed="false" aria-controls="project-grid">Faculdade</button>
           </div>
         </div>
-        <p id="filter-status" class="visually-hidden" role="status"></p>
+        <p id="project-status" class="visually-hidden" role="status"></p>
         <div class="project-grid" id="project-grid"></div>
         <p id="no-projects" hidden>Nenhum projeto nesta categoria.</p>
+        <nav class="project-pagination" id="project-pagination" aria-label="Páginas de projetos" hidden>
+          <button class="button secondary" type="button" id="previous-project-page" aria-controls="project-grid">Anterior</button>
+          <p id="project-page-label"></p>
+          <button class="button secondary" type="button" id="next-project-page" aria-controls="project-grid">Próxima</button>
+        </nav>
         <noscript>Ative o JavaScript para ver e filtrar os projetos.</noscript>
       </div>
     </section>

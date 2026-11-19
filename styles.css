@@ -177,6 +177,10 @@ h2 { font-size: clamp(2.45rem, 4.3vw, 4rem); line-height: 1.03; letter-spacing: 
 .details:hover { text-decoration: underline; text-underline-offset: .2em; }
 .card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .1rem 1rem; margin-top: auto; }
 #no-projects { padding-block: 1rem; color: var(--muted); }
+.project-pagination { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .5rem .75rem; margin-top: 1.65rem; }
+.project-pagination .button { min-height: 2.75rem; padding-inline: .75rem; }
+.project-pagination button:disabled { opacity: .55; background: transparent; cursor: default; }
+.project-pagination p { color: var(--muted); font-size: .875rem; font-variant-numeric: tabular-nums; }
 
 .about { display: grid; grid-template-columns: .8fr 1.2fr; gap: 1.25rem 3rem; padding-block: 4.5rem; }
 .about h2 { margin-top: .65rem; }
