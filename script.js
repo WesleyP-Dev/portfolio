@@ -91,33 +91,67 @@ function gallery(project, lazy = true) {
 
   const figure = element('figure', 'gallery');
   const frame = element('div', 'gallery-frame');
-  const image = element('img');
+  const media = element('div', 'gallery-media');
+  let image = element('img');
   image.loading = lazy ? 'lazy' : 'eager';
   image.decoding = 'async';
-  frame.append(image);
+  image.src = imageUrl(images[0].src);
+  image.alt = images[0].alt;
+  media.append(image);
+  frame.append(media);
   figure.append(frame);
+  if (images.length === 1) return figure;
 
   let current = 0;
-  const count = element('span', 'gallery-count');
+  let requested = 0;
+  let requestId = 0;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const count = element('span', 'gallery-count', `1/${images.length}`);
   count.setAttribute('aria-hidden', 'true');
   const status = element('span', 'visually-hidden');
   status.setAttribute('role', 'status');
 
-  function showImage(announce = false) {
-    const { src, alt } = images[current];
-    image.alt = alt;
-    image.src = imageUrl(src);
+  async function move(step) {
+    requested = (requested + step + images.length) % images.length;
+    const index = requested;
+    const request = ++requestId;
+    if (index === current) return;
+
+    const incoming = element('img');
+    incoming.alt = images[index].alt;
+    incoming.src = imageUrl(images[index].src);
+    try {
+      await incoming.decode();
+    } catch {
+      if (request === requestId) {
+        requested = current;
+        status.textContent = `Não foi possível carregar a imagem ${index + 1}.`;
+      }
+      return;
+    }
+    if (request !== requestId) return;
+
+    const previousImage = image;
+    if (reduceMotion.matches) {
+      media.replaceChildren(incoming);
+    } else {
+      for (const animation of previousImage.getAnimations()) animation.finish();
+      previousImage.previousElementSibling?.remove();
+      previousImage.setAttribute('aria-hidden', 'true');
+      media.append(incoming);
+      const transition = incoming.animate([
+        { opacity: 0, transform: `translateX(${step * 3}%)` },
+        { opacity: 1, transform: 'translateX(0)' },
+      ], { duration: 240, easing: 'ease-out' });
+      const removePrevious = () => previousImage.remove();
+      transition.finished.then(removePrevious, removePrevious);
+    }
+
+    image = incoming;
+    current = index;
     count.textContent = `${current + 1}/${images.length}`;
-    if (announce) status.textContent = `Imagem ${current + 1} de ${images.length}. ${alt}`;
+    status.textContent = `Imagem ${current + 1} de ${images.length}. ${incoming.alt}`;
   }
-
-  function move(step) {
-    current = (current + step + images.length) % images.length;
-    showImage(true);
-  }
-
-  showImage();
-  if (images.length === 1) return figure;
 
   const controls = element('div', 'gallery-controls');
   controls.setAttribute('role', 'group');
