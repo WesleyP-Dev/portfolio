@@ -5,6 +5,7 @@ const loginButton = document.querySelector('#login-button');
 const signOutButton = document.querySelector('#sign-out');
 const projectEditor = document.querySelector('#project-editor');
 const skillEditor = document.querySelector('#skill-editor');
+const certificateEditor = document.querySelector('#certificate-editor');
 const statusMessage = document.querySelector('#admin-status');
 const errorMessage = document.querySelector('#admin-error');
 const publishFeedback = document.querySelector('#publish-feedback');
@@ -68,6 +69,7 @@ function removeEntry(root, fallback) {
 
 const projectAdd = document.querySelector('#add-project');
 const skillAdd = document.querySelector('#add-skill');
+const certificateAdd = document.querySelector('#add-certificate');
 const categories = [['pessoal', 'Pessoal'], ['faculdade', 'Faculdade']];
 const visibilities = [['', 'Sem selo'], ...Object.entries(projectVisibility)];
 const stages = [['', 'Sem status'], ...Object.entries(projectStages).map(([value, { label }]) => [value, label])];
@@ -144,6 +146,21 @@ function skillEntry(skill = {}, open = false) {
   return root;
 }
 
+function certificateEntry(certificate = {}, open = false) {
+  const { root, fields, actions, bindTitle } = entry(certificate.titulo, 'Novo certificado');
+  root.open = open;
+  fields.append(
+    field('titulo', 'Nome do certificado', certificate.titulo, { required: true, limit: 180 }),
+    field('instituicao', 'Instituição emissora', certificate.instituicao, { required: true, limit: 160 }),
+    field('data', 'Data de emissão', certificate.data, { type: 'date' }),
+    field('credencial', 'Link da credencial', certificate.credencial, { type: 'url', limit: 500, placeholder: 'https://…' }),
+    field('imagem', 'Endereço da imagem do certificado', certificate.imagem, { full: true, limit: 500, placeholder: 'https://…' }),
+  );
+  bindTitle(fields.querySelector('input'));
+  actions.append(button('Remover certificado', () => removeEntry(root, certificateAdd)));
+  return root;
+}
+
 function addEntry(container, create, label) {
   if (container.children.length >= 80) {
     showError(`Adicione até 80 ${label}.`);
@@ -156,6 +173,7 @@ function addEntry(container, create, label) {
 
 projectAdd.addEventListener('click', () => addEntry(projectEditor, projectEntry, 'projetos'));
 skillAdd.addEventListener('click', () => addEntry(skillEditor, skillEntry, 'tecnologias'));
+certificateAdd.addEventListener('click', () => addEntry(certificateEditor, certificateEntry, 'certificados'));
 
 function fieldValue(scope, name, urlValidator) {
   const input = scope.querySelector(`[name="${name}"]`);
@@ -198,11 +216,17 @@ function collectContent() {
     experiencia: fieldValue(item, 'experiencia'), icone: fieldValue(item, 'icone'),
     imagem: fieldValue(item, 'imagem', imageUrl),
   }));
+  const certificates = [...certificateEditor.children].map((item) => ({
+    titulo: fieldValue(item, 'titulo'), instituicao: fieldValue(item, 'instituicao'),
+    data: fieldValue(item, 'data'), credencial: fieldValue(item, 'credencial', webUrl),
+    imagem: fieldValue(item, 'imagem', imageUrl),
+  }));
   return {
     nome: value('nome'), introducao: value('introducao'), curriculo: value('curriculo', webUrl),
     sobre: { titulo: value('titulo'), descricao: value('descricao') },
     redes: { linkedin: value('linkedin', webUrl), github: value('github', webUrl) },
     tecnologias: skills, projetos: projects,
+    ...(certificates.length ? { certificados: certificates } : {}),
   };
 }
 
@@ -216,6 +240,7 @@ function renderEditor(content) {
   for (const [name, value] of Object.entries(values)) profile.querySelector(`[name="${name}"]`).value = value;
   projectEditor.replaceChildren(...content.projetos.map((project) => projectEntry(project)));
   skillEditor.replaceChildren(...content.tecnologias.map((skill) => skillEntry(skill)));
+  certificateEditor.replaceChildren(...(content.certificados ?? []).map((certificate) => certificateEntry(certificate)));
 }
 
 function showStatus(message) {

@@ -11,12 +11,13 @@ service cloud.firestore {
       return doc.keys().hasOnly(['content', 'revision'])
         && doc.revision is int
         && content is map
-        && content.keys().hasOnly(['nome', 'introducao', 'sobre', 'redes', 'curriculo', 'tecnologias', 'projetos'])
+        && content.keys().hasOnly(['nome', 'introducao', 'sobre', 'redes', 'curriculo', 'tecnologias', 'projetos', 'certificados'])
         && content.nome is string && content.introducao is string && content.curriculo is string
         && content.sobre is map && content.sobre.titulo is string && content.sobre.descricao is string
         && content.redes is map && content.redes.linkedin is string && content.redes.github is string
         && content.tecnologias is list && content.tecnologias.size() <= 80
-        && content.projetos is list && content.projetos.size() <= 80;
+        && content.projetos is list && content.projetos.size() <= 80
+        && (!('certificados' in content) || (content.certificados is list && content.certificados.size() <= 80));
     }
 
     match /publico/portfolio {

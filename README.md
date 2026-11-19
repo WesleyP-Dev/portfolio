@@ -10,7 +10,7 @@ Abra `http://127.0.0.1:8000/` no navegador. Use `Ctrl+C` no terminal para encerr
 
 ## Administração
 
-Abra **Administração** no rodapé. Após a configuração inicial, entre com seu e-mail e senha para editar a apresentação, a bio, os perfis, o currículo, os projetos e as tecnologias. **Publicar alterações** salva o conteúdo compartilhado no Firestore e o torna visível para visitantes. O site começa com os exemplos de `conteudo.js`.
+Abra **Administração** no rodapé. Após a configuração inicial, entre com seu e-mail e senha para editar a apresentação, a bio, os perfis, o currículo, os projetos, as tecnologias e os certificados. **Publicar alterações** salva o conteúdo compartilhado no Firestore e o torna visível para visitantes. O site começa com os exemplos de `conteudo.js`.
 
 - **Currículo** aceita um link público para o PDF ou a página do currículo e aparece em **Sobre mim**.
 - **Repositório no GitHub** aceita o endereço do repositório do projeto. O link aparece direto no cartão e dentro dos detalhes.
@@ -18,6 +18,7 @@ Abra **Administração** no rodapé. Após a configuração inicial, entre com s
 - **Status do projeto** exibe um ícone e um rótulo no canto superior direito do cartão e nos detalhes. Os ícones têm animações curtas que respeitam a preferência por movimento reduzido. Passe o mouse sobre o selo para ler a explicação. Escolha **Em andamento**, **Em beta**, **Parcialmente concluído**, **Concluído** ou **Sem status**.
 - **Galeria** aceita endereços públicos que abram imagens diretamente e um texto alternativo para cada uma. A partir da segunda imagem, aparecem os controles do carrossel.
 - **Tecnologias** permitem escolher um tipo para o filtro público e, opcionalmente, detalhar a área ou especialidade. Escolha um ícone disponível, que acompanha as cores do tema, ou informe o endereço público de um ícone personalizado. A imagem personalizada mantém suas cores originais e usa a mesma moldura dos outros ícones.
+- **Certificados** exigem nome e instituição emissora. A data de emissão, o link público da credencial e a imagem são opcionais. Em uma instalação existente do Firebase, publique a versão atual de `firestore.rules` antes de cadastrar o primeiro certificado.
 
 O catálogo mostra até seis projetos por página, com paginação conforme o filtro ativo.
 
@@ -52,11 +53,11 @@ O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2
 
 ```powershell
 git log --oneline --decorate
-git diff v0.12.0 v0.13.0
+git diff v0.13.0 v0.14.0
 git status --short
 ```
 
-A `v0.13.0` dá ícones personalizados e animações aos selos de status.
+A `v0.13.0` dá ícones personalizados e animações aos selos de status. A `v0.14.0` adiciona certificados ao site e ao painel.
 
 Para enviar a primeira versão, crie um repositório vazio no GitHub e substitua `SEU-USUARIO` pelo seu usuário e `portfolio` pelo nome do repositório, se for diferente.
 
@@ -72,9 +73,9 @@ O Git guarda mudanças no código e no visual. O Firestore guarda o conteúdo pu
 git diff
 git add -- styles.css
 git commit -m "Atualiza o estilo do portfólio"
-git tag -a v0.14.0 -m "Novo estilo"
+git tag -a v0.15.0 -m "Novo estilo"
 git push
-git push origin v0.14.0
+git push origin v0.15.0
 ```
 
 ## Hospedagem

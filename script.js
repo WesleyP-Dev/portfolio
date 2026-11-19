@@ -334,6 +334,48 @@ function filterSkills(announce = true) {
   if (announce) skillStatus.textContent = count === 1 ? '1 tecnologia exibida.' : `${count} tecnologias exibidas.`;
 }
 
+const certificateDate = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long', timeZone: 'UTC' });
+
+function certificateCard(certificate) {
+  const card = element('article', 'certificate-card');
+  const imagePath = imageUrl(certificate.imagem);
+  if (imagePath) {
+    const preview = element('a', 'certificate-preview');
+    preview.href = imagePath;
+    preview.setAttribute('aria-label', `Ver imagem do certificado ${certificate.titulo}`);
+    const image = element('img');
+    image.alt = '';
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    image.src = imagePath;
+    preview.append(image);
+    card.append(preview);
+  }
+
+  const content = element('div', 'certificate-content');
+  const emblem = element('span', 'certificate-emblem');
+  emblem.setAttribute('aria-hidden', 'true');
+  content.append(emblem, element('h3', '', certificate.titulo), element('p', 'certificate-issuer', certificate.instituicao));
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(certificate.data)) {
+    const date = new Date(`${certificate.data}T00:00:00Z`);
+    if (Number.isFinite(date.valueOf())) {
+      const issued = element('time', 'certificate-issued', certificateDate.format(date));
+      issued.dateTime = certificate.data;
+      content.append(issued);
+    }
+  }
+
+  const credential = webUrl(certificate.credencial);
+  if (credential) {
+    const credentialLink = link('Ver credencial', credential);
+    credentialLink.setAttribute('aria-label', `Ver credencial de ${certificate.titulo}`);
+    content.append(credentialLink);
+  }
+  card.append(content);
+  return card;
+}
+
 skillFilter.add(new Option('Todas', 'todos'));
 for (const [type, label] of Object.entries(skillTypes)) skillFilter.add(new Option(label, type));
 skillFilter.addEventListener('change', () => filterSkills());
@@ -361,6 +403,10 @@ function renderPortfolio(content) {
   skillList.replaceChildren(...skillEntries.map(({ card }) => card));
   document.querySelector('#tecnologias').hidden = !skillEntries.length;
   filterSkills(false);
+
+  const certificates = content.certificados ?? [];
+  document.querySelector('#certificate-grid').replaceChildren(...certificates.map(certificateCard));
+  document.querySelector('#no-certificates').hidden = certificates.length > 0;
 
   entries = content.projetos.map((project) => ({ project, card: null }));
   renderProjectPage(false);

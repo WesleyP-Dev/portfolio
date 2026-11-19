@@ -10,6 +10,7 @@ const portfolio = {
     linkedin: '', // Ex.: https://www.linkedin.com/in/seu-perfil/
     github: '', // Ex.: https://github.com/seu-usuario
   },
+  certificados: [],
   tecnologias: [
     { nome: 'Windows', tipo: 'sistema', categoria: 'Sistema operacional', icone: 'windows' },
     { nome: 'Raspberry Pi OS', tipo: 'sistema', categoria: 'Sistema operacional', icone: 'raspberry' },
