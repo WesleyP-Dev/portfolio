@@ -46,11 +46,11 @@ Use o servidor local ou a hospedagem para abrir o painel. Depois da configuraç�
 
 ## Versões no Git
 
-O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. A `v0.4.0` acrescenta a paleta azul. A `v0.5.0` acrescenta o teste local do painel. A `v0.6.0` preserva as quatro paletas para comparação. A partir da `v0.7.0`, **Azul + lilás** é a paleta padrão e **Verde** segue como alternativa no cabeçalho. O navegador guarda a escolha junto com a preferência de tema claro ou escuro. A `v0.8.0` acrescenta a transição na galeria e compacta os controles. A `v0.9.0` inclui a paginação dos projetos.
+O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. A `v0.4.0` acrescenta a paleta azul. A `v0.5.0` acrescenta o teste local do painel. A `v0.6.0` preserva as quatro paletas para comparação. A `v0.7.0` define azul com lilás como padrão e verde como alternativa. A `v0.8.0` acrescenta a transição na galeria e compacta os controles. A `v0.9.0` inclui a paginação dos projetos. A `v0.10.0` adota **Azul + violeta suave** como padrão e mantém **Verde** como alternativa, com as duas opções representadas por bolinhas no cabeçalho. O navegador guarda a escolha junto com a preferência de tema claro ou escuro.
 
 ```powershell
 git log --oneline --decorate
-git diff v0.8.0 v0.9.0
+git diff v0.9.0 v0.10.0
 git status --short
 ```
 
@@ -68,9 +68,9 @@ O Git guarda mudanças no código e no visual. O Firestore guarda o conteúdo pu
 git diff
 git add -- styles.css
 git commit -m "Atualiza o estilo do portfólio"
-git tag -a v0.10.0 -m "Novo estilo"
+git tag -a v0.11.0 -m "Novo estilo"
 git push
-git push origin v0.10.0
+git push origin v0.11.0
 ```
 
 ## Hospedagem
