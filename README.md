@@ -15,7 +15,7 @@ Abra **Administração** no rodapé. Após a configuração inicial, entre com s
 - **Currículo** aceita um link público para o PDF ou a página do currículo e aparece em **Sobre mim**.
 - **Repositório no GitHub** aceita o endereço do repositório do projeto. O link aparece direto no cartão e dentro dos detalhes.
 - **Galeria** aceita endereços públicos que abram imagens diretamente e um texto alternativo para cada uma. A partir da segunda imagem, aparecem os controles do carrossel.
-- **Tecnologias** permitem escolher os ícones disponíveis ou informar o endereço público de um ícone personalizado.
+- **Tecnologias** permitem escolher os ícones disponíveis, que acompanham as cores do tema, ou informar o endereço público de um ícone personalizado. A imagem personalizada mantém suas cores originais e usa a mesma moldura dos outros ícones.
 
 ### Teste local sem conta no Firebase
 
@@ -44,11 +44,11 @@ Use o servidor local ou a hospedagem para abrir o painel. Depois da configuraç�
 
 ## Versões no Git
 
-O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. A `v0.4.0` acrescenta a paleta azul. A `v0.5.0` acrescenta o teste local do painel. A `v0.6.0` inclui a opção **Azul + lilás** no cabeçalho, ao lado de **Lilás**, **Verde** e **Azul**. O navegador guarda a escolha junto com a preferência de tema claro ou escuro.
+O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. A `v0.4.0` acrescenta a paleta azul. A `v0.5.0` acrescenta o teste local do painel. A `v0.6.0` preserva as quatro paletas para comparação. A partir da `v0.7.0`, **Azul + lilás** é a paleta padrão e **Verde** segue como alternativa no cabeçalho. O navegador guarda a escolha junto com a preferência de tema claro ou escuro.
 
 ```powershell
 git log --oneline --decorate
-git diff v0.5.0 v0.6.0
+git diff v0.6.0 v0.7.0
 git status --short
 ```
 
@@ -66,9 +66,9 @@ O Git guarda mudanças no código e no visual. O Firestore guarda o conteúdo pu
 git diff
 git add -- styles.css
 git commit -m "Atualiza o estilo do portfólio"
-git tag -a v0.7.0 -m "Novo estilo"
+git tag -a v0.8.0 -m "Novo estilo"
 git push
-git push origin v0.7.0
+git push origin v0.8.0
 ```
 
 ## Hospedagem

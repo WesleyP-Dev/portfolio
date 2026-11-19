@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR" data-theme="dark" data-palette="lilas">
+<html lang="pt-BR" data-theme="dark" data-palette="azul-lilas">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,7 +11,7 @@
       const theme = localStorage.getItem('portfolio-theme');
       if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
       const palette = localStorage.getItem('portfolio-palette');
-      if (['lilas', 'verde', 'azul', 'azul-lilas'].includes(palette)) document.documentElement.dataset.palette = palette;
+      if (palette === 'verde') document.documentElement.dataset.palette = palette;
     } catch { /* A página continua disponível sem armazenamento. */ }
   </script>
   <link rel="stylesheet" href="./styles.css">
@@ -32,10 +32,8 @@
       </nav>
       <div class="appearance">
         <div class="palettes" role="group" aria-label="Paleta de cores">
-          <button type="button" data-palette-option="lilas" aria-pressed="true">Lilás</button>
+          <button type="button" data-palette-option="azul-lilas" aria-pressed="true">Azul + lilás</button>
           <button type="button" data-palette-option="verde" aria-pressed="false">Verde</button>
-          <button type="button" data-palette-option="azul" aria-pressed="false">Azul</button>
-          <button type="button" data-palette-option="azul-lilas" aria-pressed="false">Azul + lilás</button>
         </div>
         <button class="theme-toggle" type="button" aria-label="Ativar tema claro"><span class="theme-icon" aria-hidden="true"></span></button>
       </div>
