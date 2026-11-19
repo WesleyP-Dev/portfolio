@@ -73,13 +73,15 @@
           </div>
         </div>
         <p id="project-status" class="visually-hidden" role="status"></p>
-        <div class="project-grid" id="project-grid"></div>
-        <p id="no-projects" hidden>Nenhum projeto nesta categoria.</p>
-        <nav class="project-pagination" id="project-pagination" aria-label="Páginas de projetos" hidden>
-          <button class="button secondary" type="button" id="previous-project-page" aria-controls="project-grid">Anterior</button>
-          <p id="project-page-label"></p>
-          <button class="button secondary" type="button" id="next-project-page" aria-controls="project-grid">Próxima</button>
-        </nav>
+        <div class="filter-results" id="project-results">
+          <div class="project-grid" id="project-grid"></div>
+          <p id="no-projects" hidden>Nenhum projeto nesta categoria.</p>
+          <nav class="project-pagination" id="project-pagination" aria-label="Páginas de projetos" hidden>
+            <button class="button secondary" type="button" id="previous-project-page" aria-controls="project-grid">Anterior</button>
+            <p id="project-page-label"></p>
+            <button class="button secondary" type="button" id="next-project-page" aria-controls="project-grid">Próxima</button>
+          </nav>
+        </div>
         <noscript>Ative o JavaScript para ver e filtrar os projetos.</noscript>
       </div>
     </section>
@@ -104,8 +106,10 @@
             <select id="skill-filter" aria-controls="skill-list"></select>
           </label>
           <p id="skill-status" class="visually-hidden" role="status"></p>
-          <ul class="skill-list" id="skill-list"></ul>
-          <p id="no-skills" hidden>Nenhuma tecnologia deste tipo.</p>
+          <div class="filter-results" id="skill-results">
+            <ul class="skill-list" id="skill-list"></ul>
+            <p id="no-skills" hidden>Nenhuma tecnologia deste tipo.</p>
+          </div>
         </div>
       </section>
     </section>

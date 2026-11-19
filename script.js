@@ -5,6 +5,7 @@ const filters = [...document.querySelectorAll('[data-filter]')];
 const grid = document.querySelector('#project-grid');
 const dialog = document.querySelector('#project-dialog');
 const categories = { pessoal: 'Pessoal', faculdade: 'Faculdade' };
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function element(tag, className, content) {
   const node = document.createElement(tag);
@@ -105,7 +106,6 @@ function gallery(project, lazy = true) {
   let current = 0;
   let requested = 0;
   let requestId = 0;
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const count = element('span', 'gallery-count', `1/${images.length}`);
   count.setAttribute('aria-hidden', 'true');
   const status = element('span', 'visually-hidden');
@@ -275,7 +275,9 @@ const nextPage = document.querySelector('#next-project-page');
 const pageLabel = document.querySelector('#project-page-label');
 const projectStatus = document.querySelector('#project-status');
 const projectTitle = document.querySelector('#project-title');
+const projectResults = document.querySelector('#project-results');
 const skillFilter = document.querySelector('#skill-filter');
+const skillResults = document.querySelector('#skill-results');
 const skillList = document.querySelector('#skill-list');
 const skillStatus = document.querySelector('#skill-status');
 const noSkills = document.querySelector('#no-skills');
@@ -283,6 +285,19 @@ let entries = [];
 let skillEntries = [];
 let activeFilter = filters[0];
 let currentPage = 1;
+
+function animateFilter(container, update) {
+  const before = container.getBoundingClientRect().height;
+  for (const animation of container.getAnimations()) animation.cancel();
+  update();
+  if (reduceMotion.matches) return;
+
+  const after = container.getBoundingClientRect().height;
+  container.animate([
+    { height: `${before}px`, opacity: .6, transform: 'translateY(4px)', overflow: 'clip' },
+    { height: `${after}px`, opacity: 1, transform: 'translateY(0)', overflow: 'clip' },
+  ], { duration: 260, easing: 'cubic-bezier(.2, .75, .25, 1)' });
+}
 
 function renderProjectPage(announce = true) {
   const category = activeFilter.dataset.filter;
@@ -313,7 +328,7 @@ function selectFilter(selected) {
   activeFilter = selected;
   currentPage = 1;
   filters.forEach((filter) => filter.setAttribute('aria-pressed', String(filter === selected)));
-  renderProjectPage();
+  animateFilter(projectResults, renderProjectPage);
 }
 
 function moveProjectPage(step) {
@@ -378,7 +393,7 @@ function certificateCard(certificate) {
 
 skillFilter.add(new Option('Todas', 'todos'));
 for (const [type, label] of Object.entries(skillTypes)) skillFilter.add(new Option(label, type));
-skillFilter.addEventListener('change', () => filterSkills());
+skillFilter.addEventListener('change', () => animateFilter(skillResults, filterSkills));
 
 function renderPortfolio(content) {
   const name = content.nome.trim();

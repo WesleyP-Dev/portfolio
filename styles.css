@@ -152,6 +152,7 @@ h2 { font-size: clamp(2.45rem, 4.3vw, 4rem); line-height: 1.03; letter-spacing: 
 .filters button { min-height: 2.75rem; padding: .35rem .85rem; background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: .45rem; font-size: .875rem; font-weight: 650; }
 .filters button:hover { color: var(--text); background: var(--raised); }
 .filters button[aria-pressed='true'] { color: var(--accent); background: var(--accent-soft); border-color: var(--control-line); }
+.filter-results { display: flow-root; }
 .project-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .project-grid, .certificate-grid { gap: clamp(1.05rem, 1.15vw, 2rem); }
 .project-card { display: flex; flex-direction: column; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: .85rem; }
