@@ -70,6 +70,7 @@ const projectAdd = document.querySelector('#add-project');
 const skillAdd = document.querySelector('#add-skill');
 const categories = [['pessoal', 'Pessoal'], ['faculdade', 'Faculdade']];
 const visibilities = [['', 'Sem selo'], ...Object.entries(projectVisibility)];
+const stages = [['', 'Sem status'], ...Object.entries(projectStages).map(([value, { label }]) => [value, label])];
 const icons = [['', 'Genérico'], ['windows', 'Windows'], ['raspberry', 'Raspberry Pi OS'], ['docker', 'Docker']];
 
 function projectEntry(project = {}, open = false) {
@@ -88,6 +89,7 @@ function projectEntry(project = {}, open = false) {
   fields.append(
     field('titulo', 'Título do projeto', project.titulo, { required: true, limit: 120 }),
     field('categoria', 'Categoria', project.categoria ?? 'pessoal', { choices: categories }),
+    field('status', 'Status do projeto', project.status, { choices: stages, full: true }),
     field('resumo', 'Resumo do cartão', project.resumo, { required: true, full: true, limit: 320 }),
     field('descricao', 'Descrição completa', project.descricao, { rows: 4, full: true, limit: 6000 }),
     field('tecnologias', 'Tecnologias separadas por vírgula', project.tecnologias?.join(', '), { full: true, limit: 500 }),
@@ -182,6 +184,7 @@ function collectContent() {
     const visibility = get('visibilidade');
     return {
       titulo: get('titulo'), categoria: get('categoria'), resumo: get('resumo'), descricao: get('descricao'),
+      status: get('status'),
       tecnologias: get('tecnologias').split(',').map((text) => text.trim()).filter(Boolean),
       visibilidade: visibility, repositorio: visibility === 'privado' ? '' : get('repositorio', githubUrl), demo: get('demo', webUrl),
       demonstracao: item.querySelector('[name="demonstracao"]').checked,

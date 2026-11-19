@@ -19,6 +19,7 @@ const portfolio = {
     {
       titulo: 'Rastreador de hábitos',
       categoria: 'pessoal',
+      status: 'andamento',
       visibilidade: 'privado',
       demonstracao: true,
       resumo: 'Uma interface para registrar hábitos e acompanhar a frequência ao longo da semana.',
@@ -34,6 +35,7 @@ const portfolio = {
     {
       titulo: 'Mapa do campus',
       categoria: 'faculdade',
+      status: 'beta',
       demonstracao: true,
       resumo: 'Um protótipo de navegação para encontrar salas, blocos e serviços dentro do campus.',
       descricao: 'A proposta explora como identificar pontos de referência e consultar a localização de salas pelo celular. A imagem ilustra uma tela de mapa com as áreas do campus em destaque.',
@@ -47,6 +49,7 @@ const portfolio = {
     {
       titulo: 'Painel de dados',
       categoria: 'faculdade',
+      status: 'concluido',
       demonstracao: true,
       resumo: 'Uma exploração de dados com gráficos para comparar tendências e indicadores.',
       descricao: 'A proposta organiza métricas de resumo, séries temporais e comparações em uma mesma tela. A imagem usa dados ilustrativos para mostrar a hierarquia das informações.',

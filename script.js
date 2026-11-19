@@ -191,8 +191,22 @@ function projectRepository(project) {
   return project.visibilidade === 'privado' ? null : githubUrl(project.repositorio);
 }
 
+function projectStage(project) {
+  if (!Object.hasOwn(projectStages, project.status)) return null;
+  const { label, icon, description } = projectStages[project.status];
+  const badge = element('span', 'project-stage');
+  badge.title = description;
+  const marker = element('span', 'project-stage-icon', icon);
+  marker.setAttribute('aria-hidden', 'true');
+  badge.append(marker, element('span', '', label));
+  return badge;
+}
+
 function openProject(project) {
-  document.querySelector('#dialog-category').replaceChildren(...projectBadges(project));
+  const badges = projectBadges(project);
+  const stage = projectStage(project);
+  if (stage) badges.push(stage);
+  document.querySelector('#dialog-category').replaceChildren(...badges);
   document.querySelector('#dialog-title').textContent = project.titulo;
   document.querySelector('#dialog-description').textContent = project.descricao || project.resumo;
 
@@ -215,6 +229,8 @@ function openProject(project) {
 function projectCard(project) {
   const card = element('article', 'project-card');
   const projectGallery = gallery(project);
+  const stage = projectStage(project);
+  if (stage) (projectGallery?.firstElementChild ?? card).append(stage);
   if (projectGallery) card.append(projectGallery);
 
   const content = element('div', 'card-content');

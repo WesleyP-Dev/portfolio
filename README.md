@@ -15,6 +15,7 @@ Abra **Administração** no rodapé. Após a configuração inicial, entre com s
 - **Currículo** aceita um link público para o PDF ou a página do currículo e aparece em **Sobre mim**.
 - **Repositório no GitHub** aceita o endereço do repositório do projeto. O link aparece direto no cartão e dentro dos detalhes.
 - **Visibilidade do repositório** permite exibir **Público** ou **Privado** no cartão e nos detalhes, junto com **Exemplo** quando marcado. Ao publicar como privado, o painel omite o endereço do GitHub. A apresentação do projeto continua pública.
+- **Status do projeto** exibe um símbolo e um rótulo no canto superior direito do cartão e nos detalhes. Passe o mouse sobre o selo para ler a explicação. Escolha **Em andamento**, **Em beta**, **Parcialmente concluído**, **Concluído** ou **Sem status**.
 - **Galeria** aceita endereços públicos que abram imagens diretamente e um texto alternativo para cada uma. A partir da segunda imagem, aparecem os controles do carrossel.
 - **Tecnologias** permitem escolher um tipo para o filtro público e, opcionalmente, detalhar a área ou especialidade. Escolha um ícone disponível, que acompanha as cores do tema, ou informe o endereço público de um ícone personalizado. A imagem personalizada mantém suas cores originais e usa a mesma moldura dos outros ícones.
 
@@ -47,11 +48,11 @@ Use o servidor local ou a hospedagem para abrir o painel. Depois da configuraç�
 
 ## Versões no Git
 
-O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. A `v0.4.0` acrescenta a paleta azul. A `v0.5.0` acrescenta o teste local do painel. A `v0.6.0` preserva as quatro paletas para comparação. A `v0.7.0` define azul com lilás como padrão e verde como alternativa. A `v0.8.0` acrescenta a transição na galeria e compacta os controles. A `v0.9.0` inclui a paginação dos projetos. A `v0.10.0` adota **Azul + violeta suave** como padrão e mantém **Verde** como alternativa, com as duas opções representadas por bolinhas no cabeçalho. A `v0.11.0` acrescenta os selos de visibilidade e o filtro de tecnologias. O navegador guarda a escolha junto com a preferência de tema claro ou escuro.
+O histórico local começa em `v0.1.0` com a base do portfólio. A versão `v0.2.0` preserva o site verde anterior. A `v0.3.0` acrescenta o painel, o currículo, os links de repositório e a paleta lilás. A `v0.4.0` acrescenta a paleta azul. A `v0.5.0` acrescenta o teste local do painel. A `v0.6.0` preserva as quatro paletas para comparação. A `v0.7.0` define azul com lilás como padrão e verde como alternativa. A `v0.8.0` acrescenta a transição na galeria e compacta os controles. A `v0.9.0` inclui a paginação dos projetos. A `v0.10.0` adota **Azul + violeta suave** como padrão e mantém **Verde** como alternativa, com as duas opções representadas por bolinhas no cabeçalho. A `v0.11.0` acrescenta os selos de visibilidade e o filtro de tecnologias. A `v0.12.0` acrescenta os status dos projetos. O navegador guarda a escolha junto com a preferência de tema claro ou escuro.
 
 ```powershell
 git log --oneline --decorate
-git diff v0.10.0 v0.11.0
+git diff v0.11.0 v0.12.0
 git status --short
 ```
 
@@ -69,9 +70,9 @@ O Git guarda mudanças no código e no visual. O Firestore guarda o conteúdo pu
 git diff
 git add -- styles.css
 git commit -m "Atualiza o estilo do portfólio"
-git tag -a v0.12.0 -m "Novo estilo"
+git tag -a v0.13.0 -m "Novo estilo"
 git push
-git push origin v0.12.0
+git push origin v0.13.0
 ```
 
 ## Hospedagem
