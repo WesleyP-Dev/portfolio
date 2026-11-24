@@ -16,7 +16,7 @@ O servidor entra com **a sua conta de administração** (e-mail e senha) pela AP
 | --- | --- |
 | `PORTFOLIO_EMAIL` | E-mail da conta de administração. Obrigatória para publicar. |
 | `PORTFOLIO_PASSWORD` | Senha dessa conta. Obrigatória para publicar. |
-| `PORTFOLIO_API_KEY` | `apiKey` da configuração pública do app Web. Opcional se `firebase-config.js` estiver preenchido. |
+| `PORTFOLIO_API_KEY` | Obrigatória em produção: a chave **MCP Calisto (servidor no Pi)** do Google Cloud (*APIs e serviços → Credenciais → Exibir chave*). A chave do site em `firebase-config.js` só aceita pedidos vindos do próprio site e é recusada fora do navegador. |
 | `PORTFOLIO_PROJECT_ID` | `projectId` do projeto Firebase. Opcional se `firebase-config.js` estiver preenchido. |
 | `PORTFOLIO_OWNER_UID` | UID da conta dona. Opcional; por padrão usa `ownerUid` de `firebase-config.js`. Se informado, o servidor recusa outra conta antes de tentar publicar. |
 | `GITHUB_TOKEN` | Opcional. Token do GitHub só para aumentar o limite de consultas de `import_github_repos`. |
@@ -54,14 +54,14 @@ git clone https://github.com/SEU-USUARIO/portfolio.git ~/portfolio
 node --version
 ```
 
-2. Guarde as credenciais em um arquivo que só o seu usuário pode ler, fora do repositório. Ajuste os valores; `PORTFOLIO_API_KEY` e `PORTFOLIO_PROJECT_ID` podem ficar de fora se `firebase-config.js` estiver preenchido no clone.
+2. Guarde as credenciais em um arquivo que só o seu usuário pode ler, fora do repositório. Ajuste os valores; `PORTFOLIO_PROJECT_ID` pode ficar de fora se `firebase-config.js` estiver preenchido no clone, mas `PORTFOLIO_API_KEY` precisa ser a chave própria do MCP.
 
 ```bash
 mkdir -p ~/.config/portfolio-mcp
 cat > ~/.config/portfolio-mcp/env <<'EOF'
 PORTFOLIO_EMAIL=voce@exemplo.com
 PORTFOLIO_PASSWORD=sua-senha
-PORTFOLIO_API_KEY=sua-api-key-publica
+PORTFOLIO_API_KEY=chave-do-mcp
 PORTFOLIO_PROJECT_ID=id-do-projeto
 EOF
 chmod 600 ~/.config/portfolio-mcp/env
