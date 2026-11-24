@@ -77,7 +77,9 @@ function skillCard(skill) {
     icon.append(skillMark(customIcon ? null : skill.icone || skill.nome, customIcon));
   }
   const label = element('div');
-  label.append(element('strong', '', skill.nome), element('p', 'skill-category', skill.categoria || skillTypes[skillType(skill)]));
+  // Permite quebrar linha depois de / ) , em textos longos sem espaço, como "RaspOS(Debian)/Ubuntu".
+  const breakable = (text) => String(text ?? '').replace(/([/),])(?=\S)/g, '$1\u200b');
+  label.append(element('strong', '', breakable(skill.nome)), element('p', 'skill-category', breakable(skill.categoria || skillTypes[skillType(skill)])));
   if (skill.experiencia) label.append(element('p', 'skill-note', skill.experiencia));
   item.append(icon, label);
   return item;
