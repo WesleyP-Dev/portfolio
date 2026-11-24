@@ -63,15 +63,35 @@ function skillMark(name, customUrl) {
     mark.dataset.icon = slug;
     return mark;
   }
-  const url = customUrl ?? iconMaskUrl(name);
-  if (!url) return mark;
-  const probe = new Image();
-  probe.crossOrigin = 'anonymous';
-  probe.onload = () => {
-    mark.textContent = '';
-    mark.classList.add('skill-mask');
-    mark.style.setProperty('--icon', `url("${url}")`);
-  };
-  probe.src = url;
+  const source = customUrl ?? iconMaskUrl(name);
+  if (!source) return mark;
+  resolveImage(source).then((url) => {
+    const probe = new Image();
+    probe.crossOrigin = 'anonymous';
+    probe.onload = () => {
+      mark.textContent = '';
+      mark.classList.add('skill-mask');
+      mark.style.setProperty('--icon', `url("${url}")`);
+    };
+    probe.src = url;
+  }).catch(() => {});
   return mark;
+}
+
+// Converte "fs:<id>" no endereço local da imagem guardada no Firestore; outros endereços passam direto.
+const storedImages = new Map();
+function resolveImage(src) {
+  const id = storedImageId(src);
+  if (!id) return Promise.resolve(src);
+  if (!storedImages.has(id)) {
+    storedImages.set(id, import('./cloud.mjs').then((cloud) => cloud.readImage(id)).catch((error) => {
+      storedImages.delete(id);
+      throw error;
+    }));
+  }
+  return storedImages.get(id);
+}
+
+function showImage(img, src) {
+  resolveImage(src).then((url) => { img.src = url; }).catch(() => img.closest('figure, a, .skill-icon')?.classList.add('image-missing'));
 }

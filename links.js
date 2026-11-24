@@ -15,7 +15,13 @@ function githubUrl(value) {
   return url.origin === 'https://github.com' && url.pathname.split('/').filter(Boolean).length >= 2 ? href : null;
 }
 
+// Imagens enviadas pelo painel ficam no Firestore e são referenciadas como "fs:<id>".
+function storedImageId(value) {
+  return /^fs:[A-Za-z0-9]{20}$/.test(value ?? '') ? value.slice(3) : null;
+}
+
 function imageUrl(value) {
+  if (storedImageId(value)) return value;
   return /^\.\/assets\/[\w./-]+$/i.test(value) && !value.split('/').includes('..') ? value : webUrl(value);
 }
 

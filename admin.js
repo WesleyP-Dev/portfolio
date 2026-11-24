@@ -6,6 +6,7 @@ const signOutButton = document.querySelector('#sign-out');
 const projectEditor = document.querySelector('#project-editor');
 const skillEditor = document.querySelector('#skill-editor');
 const certificateEditor = document.querySelector('#certificate-editor');
+
 const statusMessage = document.querySelector('#admin-status');
 const errorMessage = document.querySelector('#admin-error');
 const publishFeedback = document.querySelector('#publish-feedback');
@@ -47,6 +48,61 @@ function field(name, label, value = '', options = {}) {
   return wrapper;
 }
 
+// Envio de imagens do PC: reduz no navegador, converte para WebP e guarda no Firestore (grátis, sem Storage).
+const uploadLimit = 900_000;
+
+async function compressImage(file, maxSide) {
+  const bitmap = await createImageBitmap(file);
+  let scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  let quality = .86;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
+    if (blob && blob.size <= uploadLimit && ['image/webp', 'image/png', 'image/jpeg'].includes(blob.type)) return blob;
+    if (quality > .6) quality -= .12; else { scale *= .75; quality = .82; }
+  }
+  throw new Error('A imagem continua grande demais mesmo depois de reduzida. Tente outra.');
+}
+
+function withUpload(wrapper, maxSide) {
+  const input = wrapper.querySelector('input');
+  const tools = node('span', 'upload-tools');
+  const picker = node('input');
+  picker.type = 'file';
+  picker.accept = 'image/png,image/jpeg,image/webp,image/gif,image/avif';
+  picker.hidden = true;
+  const trigger = node('button', 'button secondary upload-button', 'Enviar do PC');
+  trigger.type = 'button';
+  const status = node('span', 'upload-status');
+  status.setAttribute('role', 'status');
+  trigger.addEventListener('click', () => picker.click());
+  picker.addEventListener('change', async () => {
+    const [file] = picker.files;
+    picker.value = '';
+    if (!file || !cloud) return;
+    trigger.disabled = true;
+    status.textContent = 'Reduzindo a imagem…';
+    try {
+      const blob = await compressImage(file, maxSide);
+      status.textContent = `Enviando (${Math.round(blob.size / 1024)} KB)…`;
+      input.value = await cloud.uploadImage(blob);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      status.textContent = `Imagem enviada (${Math.round(blob.size / 1024)} KB). Publique para aparecer no site.`;
+    } catch (error) {
+      status.textContent = error.code ? 'Não foi possível enviar. Confira a conexão e entre novamente.' : error.message;
+    } finally {
+      trigger.disabled = false;
+    }
+  });
+  tools.append(trigger, picker, status);
+  wrapper.append(tools);
+  return wrapper;
+}
+
 function entry(title, emptyTitle) {
   const root = node('details', 'editor-entry');
   const summary = node('summary', '', title || emptyTitle);
@@ -56,14 +112,36 @@ function entry(title, emptyTitle) {
   root.append(summary, body);
   body.append(fields, actions);
   const label = node('span', 'entry-title', title || emptyTitle);
-  summary.replaceChildren(label);
+  // Alça para arrastar com o mouse; com o foco nela, as setas ↑ e ↓ também mudam a ordem.
+  const handle = node('button', 'drag-handle');
+  handle.type = 'button';
+  handle.setAttribute('aria-label', 'Arrastar para mudar a ordem (ou use as setas para cima e para baixo)');
+  handle.title = 'Arraste para mudar a ordem';
+  handle.addEventListener('click', (event) => event.preventDefault());
+  handle.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    moveEntry(root, event.key === 'ArrowUp' ? -1 : 1);
+  });
+  handle.addEventListener('pointerdown', () => { root.draggable = true; });
+  root.addEventListener('dragstart', (event) => {
+    if (!root.draggable) return;
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', '');
+    requestAnimationFrame(() => root.classList.add('is-dragging'));
+  });
+  root.addEventListener('dragend', () => {
+    root.draggable = false;
+    root.classList.remove('is-dragging');
+    if (root.dataset.startIndex !== String([...root.parentElement.children].indexOf(root))) markDirty();
+    delete root.dataset.startIndex;
+  });
+  handle.addEventListener('pointerup', () => { if (!root.classList.contains('is-dragging')) root.draggable = false; });
+  root.addEventListener('dragstart', () => { root.dataset.startIndex = String([...root.parentElement.children].indexOf(root)); });
+  summary.replaceChildren(handle, label);
   function bindTitle(input) {
     input.addEventListener('input', () => { label.textContent = input.value.trim() || emptyTitle; });
   }
-  actions.append(
-    button('↑ Subir', () => moveEntry(root, -1)),
-    button('↓ Descer', () => moveEntry(root, 1)),
-  );
   return { root, summary, body, fields, actions, bindTitle };
 }
 
@@ -72,7 +150,22 @@ function moveEntry(root, step) {
   if (!target) return;
   if (step < 0) target.before(root); else target.after(root);
   markDirty();
-  root.querySelector('summary').focus();
+  root.querySelector('.drag-handle').focus();
+}
+
+// Cada lista aceita só os próprios itens: o item arrastado vai para antes do primeiro cujo meio fica abaixo do cursor.
+function enableSorting(list) {
+  list.addEventListener('dragover', (event) => {
+    const dragging = list.querySelector(':scope > .is-dragging');
+    if (!dragging) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    const next = [...list.children].find((item) => item !== dragging
+      && event.clientY < item.getBoundingClientRect().top + item.offsetHeight / 2);
+    if (next) { if (dragging.nextElementSibling !== next) list.insertBefore(dragging, next); }
+    else if (list.lastElementChild !== dragging) list.append(dragging);
+  });
+  list.addEventListener('drop', (event) => event.preventDefault());
 }
 
 function removeEntry(root, fallback) {
@@ -134,7 +227,7 @@ function projectEntry(project = {}, open = false) {
   function imageEntry(image) {
     const row = node('div', 'image-row field-grid');
     row.append(
-      field('src', 'Endereço da imagem', image.src, { required: true, limit: 500, placeholder: 'https://…' }),
+      withUpload(field('src', 'Imagem (endereço ou enviada do PC)', image.src, { required: true, limit: 500, placeholder: 'https://… ou use Enviar do PC' }), 1600),
       field('alt', 'Descrição da imagem para acessibilidade', image.alt, { required: true, limit: 320 }),
       button('Remover imagem', () => { row.remove(); addImage.focus(); }),
     );
@@ -156,7 +249,7 @@ function skillEntry(skill = {}, open = false) {
     field('categoria', 'Área ou especialidade (opcional)', skill.categoria, { limit: 100, placeholder: 'Ex.: Containers' }),
     field('experiencia', 'Como você usa', skill.experiencia, { rows: 3, full: true, limit: 700 }),
     field('icone', 'Ícone (opcional, sai do nome)', skill.icone, { limit: 60, placeholder: 'Ex.: python, cplusplus, proxmox' }),
-    field('imagem', 'Endereço de um ícone personalizado', skill.imagem, { limit: 500, placeholder: 'https://…' }),
+    withUpload(field('imagem', 'Ícone personalizado (endereço ou do PC)', skill.imagem, { limit: 500, placeholder: 'https://…' }), 256),
     field('imagemOriginal', 'Manter as cores originais da imagem personalizada', skill.imagemOriginal, { type: 'checkbox', full: true }),
     node('p', 'field-hint full-field', 'O ícone é escolhido pelo nome da tecnologia e pinta com a cor do tema. Se não aparecer, procure o nome em simpleicons.org e digite-o em “Ícone”.'),
   );
@@ -167,13 +260,13 @@ function skillEntry(skill = {}, open = false) {
   const keepColors = fields.querySelector('[name="imagemOriginal"]');
   const preview = node('span', 'skill-icon entry-icon');
   preview.setAttribute('aria-hidden', 'true');
-  root.querySelector('summary').prepend(preview);
+  root.querySelector('.drag-handle').after(preview);
   function updatePreview() {
     const custom = imageUrl(imageInput.value.trim());
     if (custom && keepColors.checked) {
       const image = node('img');
       image.alt = '';
-      image.src = custom;
+      showImage(image, custom);
       preview.replaceChildren(image);
     } else {
       preview.replaceChildren(skillMark(custom ? null : iconInput.value || nameInput.value, custom));
@@ -194,7 +287,7 @@ function certificateEntry(certificate = {}, open = false) {
     field('instituicao', 'Instituição emissora', certificate.instituicao, { required: true, limit: 160 }),
     field('data', 'Data de emissão', certificate.data, { type: 'date' }),
     field('credencial', 'Link da credencial', certificate.credencial, { type: 'url', limit: 500, placeholder: 'https://…' }),
-    field('imagem', 'Endereço da imagem do certificado', certificate.imagem, { full: true, limit: 500, placeholder: 'https://…' }),
+    withUpload(field('imagem', 'Imagem do certificado (endereço ou do PC)', certificate.imagem, { full: true, limit: 500, placeholder: 'https://…' }), 1600),
   );
   bindTitle(fields.querySelector('input'));
   actions.append(button('Remover certificado', () => removeEntry(root, certificateAdd)));
@@ -502,3 +595,5 @@ importInput.addEventListener('change', async () => {
     showError('O arquivo não é uma cópia válida do portfólio.');
   }
 });
+
+for (const list of [projectEditor, skillEditor, certificateEditor]) enableSorting(list);

@@ -71,7 +71,7 @@ function skillCard(skill) {
   if (customIcon && skill.imagemOriginal) {
     const image = element('img');
     image.alt = '';
-    image.src = customIcon;
+    showImage(image, customIcon);
     icon.append(image);
   } else {
     icon.append(skillMark(customIcon ? null : skill.icone || skill.nome, customIcon));
@@ -80,10 +80,32 @@ function skillCard(skill) {
   // Permite quebrar linha depois de / ) , em textos longos sem espaço, como "RaspOS(Debian)/Ubuntu".
   const breakable = (text) => String(text ?? '').replace(/([/),])(?=\S)/g, '$1\u200b');
   label.append(element('strong', '', breakable(skill.nome)), element('p', 'skill-category', breakable(skill.categoria || skillTypes[skillType(skill)])));
-  if (skill.experiencia) label.append(element('p', 'skill-note', skill.experiencia));
+  if (skill.experiencia) {
+    // O texto de "como eu uso" fica recolhido: o cartão continua compacto e só cresce quando o visitante abre.
+    const noteId = `skill-note-${++skillNoteCount}`;
+    const toggle = element('button', 'skill-more', 'Como uso');
+    toggle.type = 'button';
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-controls', noteId);
+    const chevron = element('span', 'skill-more-icon');
+    chevron.setAttribute('aria-hidden', 'true');
+    toggle.append(chevron);
+    const note = element('div', 'skill-note-wrap');
+    note.id = noteId;
+    note.append(element('p', 'skill-note', skill.experiencia));
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(open));
+      item.classList.toggle('is-open', open);
+    });
+    label.append(toggle, note);
+    item.classList.add('has-note');
+  }
   item.append(icon, label);
   return item;
 }
+
+let skillNoteCount = 0;
 
 function gallery(project, lazy = true) {
   const { imagens = [], titulo: title } = project;
@@ -96,7 +118,7 @@ function gallery(project, lazy = true) {
   let image = element('img');
   image.loading = lazy ? 'lazy' : 'eager';
   image.decoding = 'async';
-  image.src = imageUrl(images[0].src);
+  showImage(image, imageUrl(images[0].src));
   image.alt = images[0].alt;
   media.append(image);
   frame.append(media);
@@ -119,8 +141,8 @@ function gallery(project, lazy = true) {
 
     const incoming = element('img');
     incoming.alt = images[index].alt;
-    incoming.src = imageUrl(images[index].src);
     try {
+      incoming.src = await resolveImage(imageUrl(images[index].src));
       await incoming.decode();
     } catch {
       if (request === requestId) {
@@ -357,13 +379,15 @@ function certificateCard(certificate) {
   const imagePath = imageUrl(certificate.imagem);
   if (imagePath) {
     const preview = element('a', 'certificate-preview');
-    preview.href = imagePath;
+    resolveImage(imagePath).then((url) => { preview.href = url; }).catch(() => {});
+    preview.target = '_blank';
+    preview.rel = 'noopener';
     preview.setAttribute('aria-label', `Ver imagem do certificado ${certificate.titulo}`);
     const image = element('img');
     image.alt = '';
     image.loading = 'lazy';
     image.decoding = 'async';
-    image.src = imagePath;
+    showImage(image, imagePath);
     preview.append(image);
     card.append(preview);
   }

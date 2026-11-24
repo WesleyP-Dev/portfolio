@@ -20,6 +20,19 @@ service cloud.firestore {
         && (!('certificados' in content) || (content.certificados is list && content.certificados.size() <= 80));
     }
 
+    // Imagens enviadas pelo painel (WebP/PNG/JPEG comprimidas no navegador, até ~950 KB cada).
+    match /imagens/{id} {
+      allow get: if true;
+      allow create: if owner()
+        && request.resource.data.keys().hasOnly(['dados', 'tipo', 'tamanho', 'criado'])
+        && request.resource.data.dados is bytes
+        && request.resource.data.dados.size() <= 950000
+        && request.resource.data.tipo in ['image/webp', 'image/png', 'image/jpeg']
+        && request.resource.data.tamanho == request.resource.data.dados.size()
+        && request.resource.data.criado == request.time;
+      allow delete: if owner();
+    }
+
     match /publico/portfolio {
       allow get: if true;
       allow create: if owner() && validPortfolio() && request.resource.data.revision == 1;

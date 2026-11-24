@@ -71,3 +71,13 @@ button:disabled { opacity: .65; cursor: wait; }
 .github-repo span { display: grid; min-width: 0; }
 .github-repo small { color: var(--muted); overflow-wrap: anywhere; }
 #backup-heading + .field-hint { margin-top: .5rem; }
+.upload-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .6rem; font-weight: 400; }
+.upload-button { min-height: 2.3rem; padding: .3rem .75rem; font-size: .85rem; }
+.upload-status { color: var(--muted); font-size: .85rem; }
+.upload-status:empty { display: none; }
+.drag-handle { display: grid; place-items: center; flex: 0 0 1.9rem; width: 1.9rem; height: 1.9rem; margin: -.2rem 0; padding: 0; border: 1px solid transparent; border-radius: .4rem; background: transparent; color: var(--muted); cursor: grab; touch-action: none; }
+.drag-handle::before { content: ''; width: .55rem; height: .95rem; background: radial-gradient(circle, currentColor 1.2px, transparent 1.6px) 0 0 / .275rem .32rem; }
+.drag-handle:hover, .drag-handle:focus-visible { color: var(--accent); border-color: var(--glass-edge); background: var(--accent-soft); }
+.drag-handle:active { cursor: grabbing; }
+.editor-entry.is-dragging { opacity: .45; outline: 2px dashed var(--accent); outline-offset: 2px; }
+.editor-entry { transition: transform .15s ease; }

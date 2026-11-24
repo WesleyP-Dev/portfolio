@@ -72,3 +72,25 @@ export async function publishPortfolio(content, expectedRevision) {
     return revision + 1;
   });
 }
+
+export async function readImage(id) {
+  const { db, store } = await database();
+  const snapshot = await store.getDoc(store.doc(db, 'imagens', id));
+  if (!snapshot.exists()) throw new Error('Imagem não encontrada.');
+  const { dados, tipo } = snapshot.data();
+  return URL.createObjectURL(new Blob([dados.toUint8Array()], { type: tipo }));
+}
+
+export async function uploadImage(blob) {
+  const { auth } = await authentication();
+  if (auth.currentUser?.uid !== settings.ownerUid) throw new Error('Entre novamente para enviar imagens.');
+  const { db, store } = await database();
+  const ref = store.doc(store.collection(db, 'imagens'));
+  await store.setDoc(ref, {
+    dados: store.Bytes.fromUint8Array(new Uint8Array(await blob.arrayBuffer())),
+    tipo: blob.type,
+    tamanho: blob.size,
+    criado: store.serverTimestamp(),
+  });
+  return `fs:${ref.id}`;
+}

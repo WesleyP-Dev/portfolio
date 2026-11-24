@@ -250,7 +250,16 @@ h2 { font-size: clamp(2.45rem, 4.3vw, 4rem); line-height: 1.03; letter-spacing: 
 .skill-icon { display: grid; flex: 0 0 2.4rem; height: 2.4rem; place-items: center; color: var(--accent); background: var(--accent-soft); border-radius: .45rem; }
 .skill-icon img { width: 1.5rem; height: 1.5rem; object-fit: contain; }
 .skill-category, .skill-note { color: var(--muted); font-size: .875rem; line-height: 1.4; }
-.skill-note { margin-top: .35rem; }
+.skill-list { align-items: start; }
+.skill-more { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: .3rem; min-height: 1.75rem; margin-top: .3rem; padding: .1rem .5rem; border: 1px solid var(--glass-edge); border-radius: 1rem; background: var(--accent-soft); color: var(--accent); font-size: .78rem; font-weight: 650; }
+.skill-more:hover { border-color: var(--accent); }
+.skill-more-icon { width: .42rem; height: .42rem; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: translateY(-.1rem) rotate(45deg); transition: transform .25s ease; }
+.skill.is-open .skill-more-icon { transform: translateY(.08rem) rotate(-135deg); }
+.skill-note-wrap { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows .3s ease, visibility 0s linear .3s; }
+.skill-note-wrap > .skill-note { overflow: hidden; min-height: 0; margin: 0; }
+.skill.is-open .skill-note-wrap { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows .3s ease, visibility 0s; }
+.skill.is-open .skill-note { padding-top: .45rem; }
+.skill.is-open { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
 .skill-mark { font: 700 .75rem/1 var(--mono); }
 .skill-mark[data-icon='windows'] { display: block; width: 1.4rem; height: 1.4rem; font-size: 0; background: linear-gradient(currentColor 0 0) 0 0 / 45% 45% no-repeat, linear-gradient(currentColor 0 0) 100% 0 / 45% 45% no-repeat, linear-gradient(currentColor 0 0) 0 100% / 45% 45% no-repeat, linear-gradient(currentColor 0 0) 100% 100% / 45% 45% no-repeat; }
 .skill-mask { display: block; width: 1.35rem; height: 1.35rem; background: currentColor; -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
