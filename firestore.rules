@@ -20,17 +20,33 @@ service cloud.firestore {
         && (!('certificados' in content) || (content.certificados is list && content.certificados.size() <= 80));
     }
 
-    // Imagens enviadas pelo painel (WebP/PNG/JPEG comprimidas no navegador, até ~950 KB cada).
+    // Imagens enviadas pelo painel: WebP/PNG/JPEG comprimidas no navegador (até ~950 KB) ou GIFs
+    // animados como vieram. GIFs maiores ficam em até 10 partes na subcoleção "partes".
     match /imagens/{id} {
       allow get: if true;
-      allow create: if owner()
-        && request.resource.data.keys().hasOnly(['dados', 'tipo', 'tamanho', 'criado'])
+      allow create: if owner() && request.resource.data.criado == request.time && (
+        (request.resource.data.keys().hasOnly(['tipo', 'tamanho', 'partes', 'criado'])
+          && request.resource.data.tipo == 'image/gif'
+          && request.resource.data.partes is int
+          && request.resource.data.partes >= 2 && request.resource.data.partes <= 10
+          && request.resource.data.tamanho is int
+          && request.resource.data.tamanho <= 9000000)
+        || (request.resource.data.keys().hasOnly(['dados', 'tipo', 'tamanho', 'criado'])
         && request.resource.data.dados is bytes
         && request.resource.data.dados.size() <= 950000
-        && request.resource.data.tipo in ['image/webp', 'image/png', 'image/jpeg']
-        && request.resource.data.tamanho == request.resource.data.dados.size()
-        && request.resource.data.criado == request.time;
+        && request.resource.data.tipo in ['image/webp', 'image/png', 'image/jpeg', 'image/gif']
+        && request.resource.data.tamanho == request.resource.data.dados.size()));
       allow delete: if owner();
+
+      match /partes/{parte} {
+        allow get: if true;
+        allow create: if owner()
+          && parte in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+          && request.resource.data.keys().hasOnly(['dados'])
+          && request.resource.data.dados is bytes
+          && request.resource.data.dados.size() <= 950000;
+        allow delete: if owner();
+      }
     }
 
     match /publico/portfolio {

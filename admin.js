@@ -50,6 +50,8 @@ function field(name, label, value = '', options = {}) {
 
 // Envio de imagens do PC: reduz no navegador, converte para WebP e guarda no Firestore (grátis, sem Storage).
 const uploadLimit = 900_000;
+const gifLimit = 8 * 1024 * 1024;
+const sizeText = (bytes) => bytes < 1024 * 1024 ? `${Math.round(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`;
 
 async function compressImage(file, maxSide) {
   const bitmap = await createImageBitmap(file);
@@ -67,7 +69,8 @@ async function compressImage(file, maxSide) {
   throw new Error('A imagem continua grande demais mesmo depois de reduzida. Tente outra.');
 }
 
-function withUpload(wrapper, maxSide) {
+// keepGif: GIFs animados vão como vieram (até 8 MB) em vez de virar uma imagem parada.
+function withUpload(wrapper, maxSide, { keepGif = false } = {}) {
   const input = wrapper.querySelector('input');
   const tools = node('span', 'upload-tools');
   const picker = node('input');
@@ -84,14 +87,16 @@ function withUpload(wrapper, maxSide) {
     picker.value = '';
     if (!file || !cloud) return;
     trigger.disabled = true;
-    status.textContent = 'Reduzindo a imagem…';
+    const gif = keepGif && file.type === 'image/gif';
+    status.textContent = gif ? 'Preparando o GIF…' : 'Reduzindo a imagem…';
     try {
-      const blob = await compressImage(file, maxSide);
-      status.textContent = `Enviando (${Math.round(blob.size / 1024)} KB)…`;
+      if (gif && file.size > gifLimit) throw new Error(`Este GIF tem ${sizeText(file.size)} e o limite é 8 MB. Diminua o tamanho, a duração ou as cores (por exemplo, em ezgif.com/optimize) e envie de novo.`);
+      const blob = gif ? file : await compressImage(file, maxSide);
+      status.textContent = `Enviando (${sizeText(blob.size)})…`;
       input.value = await cloud.uploadImage(blob);
       input.dispatchEvent(new Event('input', { bubbles: true }));
       input.dispatchEvent(new Event('change', { bubbles: true }));
-      status.textContent = `Imagem enviada (${Math.round(blob.size / 1024)} KB). Publique para aparecer no site.`;
+      status.textContent = `${gif ? 'GIF enviado' : 'Imagem enviada'} (${sizeText(blob.size)}). Publique para aparecer no site.`;
     } catch (error) {
       status.textContent = error.code ? 'Não foi possível enviar. Confira a conexão e entre novamente.' : error.message;
     } finally {
@@ -227,14 +232,14 @@ function projectEntry(project = {}, open = false) {
   function imageEntry(image) {
     const row = node('div', 'image-row field-grid');
     row.append(
-      withUpload(field('src', 'Imagem (endereço ou enviada do PC)', image.src, { required: true, limit: 500, placeholder: 'https://… ou use Enviar do PC' }), 1600),
+      withUpload(field('src', 'Imagem (endereço ou enviada do PC)', image.src, { required: true, limit: 500, placeholder: 'https://… ou use Enviar do PC' }), 1600, { keepGif: true }),
       field('alt', 'Descrição da imagem para acessibilidade', image.alt, { required: true, limit: 320 }),
       button('Remover imagem', () => { row.remove(); addImage.focus(); }),
     );
     return row;
   }
   images.append(...(project.imagens ?? []).map(imageEntry));
-  gallery.append(node('legend', '', 'Galeria'), node('p', 'field-hint', 'Use endereços públicos que abram diretamente a imagem.'), images, addImage);
+  gallery.append(node('legend', '', 'Galeria'), node('p', 'field-hint', 'Use endereços públicos que abram diretamente a imagem, ou envie do PC. GIFs animados (até 8 MB) continuam animados; a primeira imagem é a prévia do cartão.'), images, addImage);
   body.insertBefore(gallery, actions);
   actions.append(button('Remover projeto', () => removeEntry(root, projectAdd)));
   return root;

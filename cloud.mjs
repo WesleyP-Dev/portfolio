@@ -77,20 +77,33 @@ export async function readImage(id) {
   const { db, store } = await database();
   const snapshot = await store.getDoc(store.doc(db, 'imagens', id));
   if (!snapshot.exists()) throw new Error('Imagem não encontrada.');
-  const { dados, tipo } = snapshot.data();
-  return URL.createObjectURL(new Blob([dados.toUint8Array()], { type: tipo }));
+  const { dados, tipo, partes } = snapshot.data();
+  if (dados) return URL.createObjectURL(new Blob([dados.toUint8Array()], { type: tipo }));
+  // Arquivos maiores (GIFs) ficam divididos em partes de até ~950 KB na subcoleção "partes".
+  const pieces = await Promise.all(Array.from({ length: partes }, (_, index) => store.getDoc(store.doc(db, 'imagens', id, 'partes', String(index)))));
+  return URL.createObjectURL(new Blob(pieces.map((piece) => piece.data().dados.toUint8Array()), { type: tipo }));
 }
+
+const pieceSize = 900_000;
 
 export async function uploadImage(blob) {
   const { auth } = await authentication();
   if (auth.currentUser?.uid !== settings.ownerUid) throw new Error('Entre novamente para enviar imagens.');
   const { db, store } = await database();
   const ref = store.doc(store.collection(db, 'imagens'));
-  await store.setDoc(ref, {
-    dados: store.Bytes.fromUint8Array(new Uint8Array(await blob.arrayBuffer())),
-    tipo: blob.type,
-    tamanho: blob.size,
-    criado: store.serverTimestamp(),
-  });
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  if (bytes.length <= pieceSize) {
+    await store.setDoc(ref, { dados: store.Bytes.fromUint8Array(bytes), tipo: blob.type, tamanho: blob.size, criado: store.serverTimestamp() });
+    return `fs:${ref.id}`;
+  }
+  // Um documento do Firestore guarda no máximo 1 MiB: o arquivo vai em partes, gravadas juntas.
+  const total = Math.ceil(bytes.length / pieceSize);
+  const batch = store.writeBatch(db);
+  batch.set(ref, { tipo: blob.type, tamanho: blob.size, partes: total, criado: store.serverTimestamp() });
+  for (let index = 0; index < total; index += 1) {
+    const dados = store.Bytes.fromUint8Array(bytes.slice(index * pieceSize, (index + 1) * pieceSize));
+    batch.set(store.doc(db, 'imagens', ref.id, 'partes', String(index)), { dados });
+  }
+  await batch.commit();
   return `fs:${ref.id}`;
 }
