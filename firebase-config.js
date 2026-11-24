@@ -9,5 +9,5 @@ globalThis.portfolioCloud = {
     messagingSenderId: '468778738700',
     appId: '1:468778738700:web:8fe6e4fffbf9f247403a29',
   },
-  ownerUid: 'CONFIGURE_OWNER_UID',
+  ownerUid: '6EXAaVCxYqXnn0QEDOAgSfXoECq1',
 };
