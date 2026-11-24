@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - 'mcp/**'
       - '**/*.md'
+      - 'docs/**'
   workflow_dispatch:
 
 concurrency:

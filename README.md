@@ -1,5 +1,13 @@
 # Portfólio
 
+<p align="center">
+  <a href="https://wesleypie.tech"><img src="docs/banner.png" alt="Página inicial do portfólio no computador e no celular" width="100%"></a>
+</p>
+
+<p align="center">
+  <a href="https://wesleypie.tech"><strong>wesleypie.tech</strong></a>
+</p>
+
 Site estático em HTML, CSS e JavaScript, com temas claro e escuro, filtros de projetos e galeria navegável por teclado. Para abrir, clique duas vezes em `index.html` ou use um servidor local na raiz do projeto.
 
 ```powershell
@@ -7,6 +15,20 @@ python -m http.server 8000 --bind 127.0.0.1
 ```
 
 Abra `http://127.0.0.1:8000/` no navegador. Use `Ctrl+C` no terminal para encerrar o servidor.
+
+## Visual
+
+**Projetos** com filtro por categoria, selo de status, galeria e link do repositório:
+
+![Seção de projetos](docs/projetos.png)
+
+**Tecnologias** com ícones automáticos na cor do tema e a nota “Como uso” recolhível:
+
+![Seção de tecnologias](docs/tecnologias.png)
+
+**Tema escuro e claro**, com duas paletas de cores:
+
+![Comparação entre o tema escuro e o claro](docs/temas.png)
 
 ## Administração
 
@@ -19,7 +41,7 @@ Abra **Administração** no rodapé. Após a configuração inicial, entre com s
 - **Galeria** aceita endereços públicos que abram imagens diretamente, ou imagens do seu computador pelo botão **Enviar do PC**, e um texto alternativo para cada uma. O envio reduz a imagem no navegador (WebP, até 1600 px; ícones até 256 px) e guarda no Firestore, na coleção `imagens`, sem precisar do Storage. O mesmo botão existe nos ícones de tecnologia e nas imagens de certificados. A partir da segunda imagem, aparecem os controles do carrossel.
 - **Tecnologias** permitem escolher um tipo para o filtro público e, opcionalmente, detalhar a área ou especialidade. O ícone sai do nome automaticamente (Python, C++, Node.js, Proxmox…) pelo [Simple Icons](https://simpleicons.org) e sempre usa a cor do tema. Se o nome não bater, digite o identificador do Simple Icons no campo **Ícone**; a prévia aparece no próprio item. Um ícone personalizado por endereço também recebe a cor do tema, a menos que **Manter as cores originais** esteja marcado.
 - **E-mail de contato** e **LinkedIn** formam a seção **Contato**. Links vazios, certificados e contato ficam ocultos para visitantes até serem preenchidos.
-- **Importar do GitHub** lista os repositórios públicos de um usuário e cria rascunhos de projeto. Os botões **Subir** e **Descer** definem a ordem no site. **Cópia de segurança** baixa ou carrega todo o conteúdo em JSON. O painel avisa antes de sair com alterações não publicadas.
+- **Importar do GitHub** lista os repositórios públicos de um usuário e cria rascunhos de projeto. **Cópia de segurança** baixa ou carrega todo o conteúdo em JSON. O painel avisa antes de sair com alterações não publicadas.
 - **Certificados** exigem nome e instituição emissora. A data de emissão, o link público da credencial e a imagem são opcionais. Em uma instalação existente do Firebase, publique a versão atual de `firestore.rules` antes de cadastrar o primeiro certificado.
 
 Para mudar a ordem de projetos, tecnologias e certificados, arraste pela alça ⠿ à esquerda do nome (ou foque a alça e use as setas). O catálogo mostra até seis projetos por página, com paginação conforme o filtro ativo.
