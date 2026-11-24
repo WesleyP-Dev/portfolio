@@ -24,7 +24,7 @@ Abra **Administração** no rodapé. Após a configuração inicial, entre com s
 
 O catálogo mostra até seis projetos por página, com paginação conforme o filtro ativo.
 
-Com o Firebase ativo, o site guarda no navegador a última versão publicada e a exibe enquanto busca a atual, sem mostrar os exemplos de `conteudo.js`. Depois de hospedar, troque `og:image` em `index.html` pelo endereço completo de `assets/og.jpg` para a prévia aparecer ao compartilhar o link.
+Com o Firebase ativo, o site guarda no navegador a última versão publicada e a exibe enquanto busca a atual, sem mostrar os exemplos de `conteudo.js`. O site está publicado em [wesleypie.tech](https://wesleypie.tech), e `og:image` em `index.html` aponta para `https://wesleypie.tech/assets/og.jpg`; se trocar de domínio, atualize esse endereço.
 
 ### Teste local sem conta no Firebase
 
