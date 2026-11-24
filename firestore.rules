@@ -20,13 +20,13 @@ service cloud.firestore {
         && (!('certificados' in content) || (content.certificados is list && content.certificados.size() <= 80));
     }
 
-    // Imagens enviadas pelo painel: WebP/PNG/JPEG comprimidas no navegador (até ~950 KB) ou GIFs
-    // animados como vieram. GIFs maiores ficam em até 10 partes na subcoleção "partes".
+    // Imagens enviadas pelo painel: WebP/PNG/JPEG comprimidas no navegador (até ~950 KB), ou GIFs
+    // e vídeos curtos (MP4/WebM) como vieram. Os maiores ficam em até 10 partes na subcoleção "partes".
     match /imagens/{id} {
       allow get: if true;
       allow create: if owner() && request.resource.data.criado == request.time && (
         (request.resource.data.keys().hasOnly(['tipo', 'tamanho', 'partes', 'criado'])
-          && request.resource.data.tipo == 'image/gif'
+          && request.resource.data.tipo in ['image/gif', 'video/mp4', 'video/webm']
           && request.resource.data.partes is int
           && request.resource.data.partes >= 2 && request.resource.data.partes <= 10
           && request.resource.data.tamanho is int
@@ -34,7 +34,7 @@ service cloud.firestore {
         || (request.resource.data.keys().hasOnly(['dados', 'tipo', 'tamanho', 'criado'])
         && request.resource.data.dados is bytes
         && request.resource.data.dados.size() <= 950000
-        && request.resource.data.tipo in ['image/webp', 'image/png', 'image/jpeg', 'image/gif']
+        && request.resource.data.tipo in ['image/webp', 'image/png', 'image/jpeg', 'image/gif', 'video/mp4', 'video/webm']
         && request.resource.data.tamanho == request.resource.data.dados.size()));
       allow delete: if owner();
 

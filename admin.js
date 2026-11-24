@@ -69,13 +69,14 @@ async function compressImage(file, maxSide) {
   throw new Error('A imagem continua grande demais mesmo depois de reduzida. Tente outra.');
 }
 
-// keepGif: GIFs animados vão como vieram (até 8 MB) em vez de virar uma imagem parada.
-function withUpload(wrapper, maxSide, { keepGif = false } = {}) {
+// keepAnimated: GIFs e vídeos curtos (MP4/WebM) vão como vieram, até 8 MB, em vez de virar uma imagem parada.
+const animatedTypes = ['image/gif', 'video/mp4', 'video/webm'];
+function withUpload(wrapper, maxSide, { keepAnimated = false } = {}) {
   const input = wrapper.querySelector('input');
   const tools = node('span', 'upload-tools');
   const picker = node('input');
   picker.type = 'file';
-  picker.accept = 'image/png,image/jpeg,image/webp,image/gif,image/avif';
+  picker.accept = `image/png,image/jpeg,image/webp,image/gif,image/avif${keepAnimated ? ',video/mp4,video/webm' : ''}`;
   picker.hidden = true;
   const trigger = node('button', 'button secondary upload-button', 'Enviar do PC');
   trigger.type = 'button';
@@ -87,16 +88,23 @@ function withUpload(wrapper, maxSide, { keepGif = false } = {}) {
     picker.value = '';
     if (!file || !cloud) return;
     trigger.disabled = true;
-    const gif = keepGif && file.type === 'image/gif';
-    status.textContent = gif ? 'Preparando o GIF…' : 'Reduzindo a imagem…';
+    const animated = keepAnimated && animatedTypes.includes(file.type);
+    const video = file.type.startsWith('video/');
+    const kind = video ? 'Vídeo' : file.type === 'image/gif' ? 'GIF' : 'Imagem';
+    status.textContent = animated ? `Preparando o ${kind}…` : 'Reduzindo a imagem…';
     try {
-      if (gif && file.size > gifLimit) throw new Error(`Este GIF tem ${sizeText(file.size)} e o limite é 8 MB. Diminua o tamanho, a duração ou as cores (por exemplo, em ezgif.com/optimize) e envie de novo.`);
-      const blob = gif ? file : await compressImage(file, maxSide);
+      if (video && !animated) throw new Error('Vídeos só podem ir na galeria dos projetos.');
+      if (animated && file.size > gifLimit) {
+        throw new Error(video
+          ? `Este vídeo tem ${sizeText(file.size)} e o limite é 8 MB. Grave um trecho mais curto (3 a 6 segundos) ou com resolução menor e envie de novo.`
+          : `Este GIF tem ${sizeText(file.size)} e o limite é 8 MB. Diminua o tamanho, a duração ou as cores (por exemplo, em ezgif.com/optimize), ou envie como vídeo MP4.`);
+      }
+      const blob = animated ? file : await compressImage(file, maxSide);
       status.textContent = `Enviando (${sizeText(blob.size)})…`;
       input.value = await cloud.uploadImage(blob);
       input.dispatchEvent(new Event('input', { bubbles: true }));
       input.dispatchEvent(new Event('change', { bubbles: true }));
-      status.textContent = `${gif ? 'GIF enviado' : 'Imagem enviada'} (${sizeText(blob.size)}). Publique para aparecer no site.`;
+      status.textContent = `${animated ? `${kind} enviado` : 'Imagem enviada'} (${sizeText(blob.size)}). Publique para aparecer no site.`;
     } catch (error) {
       status.textContent = error.code ? 'Não foi possível enviar. Confira a conexão e entre novamente.' : error.message;
     } finally {
@@ -232,14 +240,14 @@ function projectEntry(project = {}, open = false) {
   function imageEntry(image) {
     const row = node('div', 'image-row field-grid');
     row.append(
-      withUpload(field('src', 'Imagem (endereço ou enviada do PC)', image.src, { required: true, limit: 500, placeholder: 'https://… ou use Enviar do PC' }), 1600, { keepGif: true }),
+      withUpload(field('src', 'Imagem ou vídeo (endereço ou enviado do PC)', image.src, { required: true, limit: 500, placeholder: 'https://… ou use Enviar do PC' }), 1600, { keepAnimated: true }),
       field('alt', 'Descrição da imagem para acessibilidade', image.alt, { required: true, limit: 320 }),
       button('Remover imagem', () => { row.remove(); addImage.focus(); }),
     );
     return row;
   }
   images.append(...(project.imagens ?? []).map(imageEntry));
-  gallery.append(node('legend', '', 'Galeria'), node('p', 'field-hint', 'Use endereços públicos que abram diretamente a imagem, ou envie do PC. GIFs animados (até 8 MB) continuam animados; a primeira imagem é a prévia do cartão.'), images, addImage);
+  gallery.append(node('legend', '', 'Galeria'), node('p', 'field-hint', 'Use endereços públicos que abram diretamente a imagem, ou envie do PC. GIFs e vídeos curtos MP4/WebM (até 8 MB) tocam sozinhos, sem som, em repetição; o primeiro item é a prévia do cartão.'), images, addImage);
   body.insertBefore(gallery, actions);
   actions.append(button('Remover projeto', () => removeEntry(root, projectAdd)));
   return root;

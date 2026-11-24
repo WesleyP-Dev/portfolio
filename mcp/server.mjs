@@ -36,7 +36,7 @@ const projectFields = {
   demonstracao: { type: 'boolean', description: 'Marca como projeto de exemplo.' },
   imagens: {
     type: 'array', maxItems: 16, description: 'Galeria completa (substitui a atual).',
-    items: { type: 'object', properties: { src: url('https://… ou ./assets/…'), alt: { type: 'string', maxLength: 320 } }, required: ['src', 'alt'], additionalProperties: false },
+    items: { type: 'object', properties: { src: url('https://… ou ./assets/… (imagem, GIF ou vídeo .mp4/.webm; o primeiro item é a prévia do cartão)'), alt: { type: 'string', maxLength: 320 } }, required: ['src', 'alt'], additionalProperties: false },
   },
 };
 const skillFields = {

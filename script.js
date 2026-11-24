@@ -107,6 +107,54 @@ function skillCard(skill) {
 
 let skillNoteCount = 0;
 
+// Vídeos da galeria funcionam como GIF: sem som, em repetição e só tocando enquanto estão na tela.
+const videoUrl = (src) => /\.(mp4|webm)(?:[?#]|$)/i.test(src);
+const videoObserver = 'IntersectionObserver' in window ? new IntersectionObserver((items) => {
+  for (const { target, isIntersecting } of items) {
+    if (!target.isConnected) videoObserver.unobserve(target);
+    else if (isIntersecting && !reduceMotion.matches) target.play().catch(() => {});
+    else target.pause();
+  }
+}) : null;
+
+function whenVisible(target, callback) {
+  if (!('IntersectionObserver' in window)) return callback();
+  const observer = new IntersectionObserver((items) => {
+    if (!items.some((item) => item.isIntersecting)) return;
+    observer.disconnect();
+    callback();
+  }, { rootMargin: '300px' });
+  observer.observe(target);
+}
+
+async function loadMedia(src, alt) {
+  const url = await resolveImage(src);
+  const isVideo = storedImageId(src) ? (await import('./cloud.mjs')).imageType(url).startsWith('video/') : videoUrl(src);
+  if (!isVideo) {
+    const img = element('img');
+    img.alt = alt;
+    img.decoding = 'async';
+    img.src = url;
+    await img.decode();
+    return img;
+  }
+  const video = element('video');
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.disablePictureInPicture = true;
+  video.preload = 'auto';
+  video.setAttribute('aria-label', alt);
+  video.src = url;
+  await new Promise((resolve, reject) => {
+    video.addEventListener('loadeddata', resolve, { once: true });
+    video.addEventListener('error', reject, { once: true });
+  });
+  if (videoObserver) videoObserver.observe(video);
+  else if (!reduceMotion.matches) video.play().catch(() => {});
+  return video;
+}
+
 function gallery(project, lazy = true) {
   const { imagens = [], titulo: title } = project;
   const images = imagens.filter((image) => imageUrl(image.src));
@@ -115,11 +163,25 @@ function gallery(project, lazy = true) {
   const figure = element('figure', 'gallery');
   const frame = element('div', 'gallery-frame');
   const media = element('div', 'gallery-media');
-  let image = element('img');
-  image.loading = lazy ? 'lazy' : 'eager';
-  image.decoding = 'async';
-  showImage(image, imageUrl(images[0].src));
-  image.alt = images[0].alt;
+  let image;
+  const first = imageUrl(images[0].src);
+  if (storedImageId(first) || videoUrl(first)) {
+    // Arquivos enviados pelo painel e vídeos só são baixados quando o cartão chega perto da tela.
+    const placeholder = element('span');
+    image = placeholder;
+    const load = () => loadMedia(first, images[0].alt).then((loaded) => {
+      placeholder.replaceWith(loaded);
+      if (image === placeholder) image = loaded;
+    }).catch(() => figure.classList.add('image-missing'));
+    if (lazy) whenVisible(frame, load); else load();
+  } else {
+    image = element('img');
+    image.loading = lazy ? 'lazy' : 'eager';
+    image.decoding = 'async';
+    image.src = first;
+    image.alt = images[0].alt;
+    image.addEventListener('error', () => figure.classList.add('image-missing'), { once: true });
+  }
   media.append(image);
   frame.append(media);
   figure.append(frame);
@@ -139,11 +201,9 @@ function gallery(project, lazy = true) {
     const request = ++requestId;
     if (index === current) return;
 
-    const incoming = element('img');
-    incoming.alt = images[index].alt;
+    let incoming;
     try {
-      incoming.src = await resolveImage(imageUrl(images[index].src));
-      await incoming.decode();
+      incoming = await loadMedia(imageUrl(images[index].src), images[index].alt);
     } catch {
       if (request === requestId) {
         requested = current;
@@ -165,14 +225,14 @@ function gallery(project, lazy = true) {
         { opacity: 0, transform: `translateX(${step * 3}%)` },
         { opacity: 1, transform: 'translateX(0)' },
       ], { duration: 240, easing: 'ease-out' });
-      const removePrevious = () => previousImage.remove();
+      const removePrevious = () => { previousImage.pause?.(); previousImage.remove(); };
       transition.finished.then(removePrevious, removePrevious);
     }
 
     image = incoming;
     current = index;
     count.textContent = `${current + 1}/${images.length}`;
-    status.textContent = `Imagem ${current + 1} de ${images.length}. ${incoming.alt}`;
+    status.textContent = `Imagem ${current + 1} de ${images.length}. ${images[index].alt}`;
   }
 
   const controls = element('div', 'gallery-controls');

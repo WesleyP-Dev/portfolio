@@ -73,15 +73,28 @@ export async function publishPortfolio(content, expectedRevision) {
   });
 }
 
+const blobTypes = new Map();
+
+// Tipo do arquivo por trás de um endereço criado por readImage (por exemplo, video/mp4).
+export function imageType(url) {
+  return blobTypes.get(url) ?? '';
+}
+
 export async function readImage(id) {
   const { db, store } = await database();
   const snapshot = await store.getDoc(store.doc(db, 'imagens', id));
   if (!snapshot.exists()) throw new Error('Imagem não encontrada.');
   const { dados, tipo, partes } = snapshot.data();
-  if (dados) return URL.createObjectURL(new Blob([dados.toUint8Array()], { type: tipo }));
+  if (dados) return typedUrl(new Blob([dados.toUint8Array()], { type: tipo }));
   // Arquivos maiores (GIFs) ficam divididos em partes de até ~950 KB na subcoleção "partes".
   const pieces = await Promise.all(Array.from({ length: partes }, (_, index) => store.getDoc(store.doc(db, 'imagens', id, 'partes', String(index)))));
-  return URL.createObjectURL(new Blob(pieces.map((piece) => piece.data().dados.toUint8Array()), { type: tipo }));
+  return typedUrl(new Blob(pieces.map((piece) => piece.data().dados.toUint8Array()), { type: tipo }));
+}
+
+function typedUrl(blob) {
+  const url = URL.createObjectURL(blob);
+  blobTypes.set(url, blob.type);
+  return url;
 }
 
 const pieceSize = 900_000;
