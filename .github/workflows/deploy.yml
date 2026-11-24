@@ -1,0 +1,43 @@
+# Publica o site no Firebase Hosting (e as regras do Firestore) a cada push na main.
+name: Publicar no Firebase
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'mcp/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+concurrency:
+  group: firebase-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Preparar arquivos públicos
+        run: node prepare-hosting.mjs
+
+      - name: Credencial da conta github-deploy
+        env:
+          CHAVE: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$CHAVE" > "$RUNNER_TEMP/conta.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/conta.json" >> "$GITHUB_ENV"
+
+      - name: Publicar site e regras
+        run: npx --yes firebase-tools@14 deploy --only hosting,firestore:rules --project wesley-pietro-portfolio --non-interactive --message "GitHub ${GITHUB_SHA::7}"
+
+      - name: Apagar credencial
+        if: always()
+        run: rm -f "$RUNNER_TEMP/conta.json"

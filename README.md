@@ -16,13 +16,13 @@ Abra **Administração** no rodapé. Após a configuração inicial, entre com s
 - **Repositório no GitHub** aceita o endereço do repositório do projeto. O link aparece direto no cartão e dentro dos detalhes.
 - **Visibilidade do repositório** permite exibir **Público** ou **Privado** no cartão e nos detalhes, junto com **Exemplo** quando marcado. Ao publicar como privado, o painel omite o endereço do GitHub. A apresentação do projeto continua pública.
 - **Status do projeto** exibe um ícone e um rótulo no canto superior direito do cartão e nos detalhes. Os ícones têm animações curtas que respeitam a preferência por movimento reduzido. Passe o mouse sobre o selo para ler a explicação. Escolha **Em andamento**, **Em beta**, **Parcialmente concluído**, **Concluído** ou **Sem status**.
-- **Galeria** aceita endereços públicos que abram imagens diretamente e um texto alternativo para cada uma. A partir da segunda imagem, aparecem os controles do carrossel.
+- **Galeria** aceita endereços públicos que abram imagens diretamente, ou imagens do seu computador pelo botão **Enviar do PC**, e um texto alternativo para cada uma. O envio reduz a imagem no navegador (WebP, até 1600 px; ícones até 256 px) e guarda no Firestore, na coleção `imagens`, sem precisar do Storage. O mesmo botão existe nos ícones de tecnologia e nas imagens de certificados. A partir da segunda imagem, aparecem os controles do carrossel.
 - **Tecnologias** permitem escolher um tipo para o filtro público e, opcionalmente, detalhar a área ou especialidade. O ícone sai do nome automaticamente (Python, C++, Node.js, Proxmox…) pelo [Simple Icons](https://simpleicons.org) e sempre usa a cor do tema. Se o nome não bater, digite o identificador do Simple Icons no campo **Ícone**; a prévia aparece no próprio item. Um ícone personalizado por endereço também recebe a cor do tema, a menos que **Manter as cores originais** esteja marcado.
 - **E-mail de contato** e **LinkedIn** formam a seção **Contato**. Links vazios, certificados e contato ficam ocultos para visitantes até serem preenchidos.
 - **Importar do GitHub** lista os repositórios públicos de um usuário e cria rascunhos de projeto. Os botões **Subir** e **Descer** definem a ordem no site. **Cópia de segurança** baixa ou carrega todo o conteúdo em JSON. O painel avisa antes de sair com alterações não publicadas.
 - **Certificados** exigem nome e instituição emissora. A data de emissão, o link público da credencial e a imagem são opcionais. Em uma instalação existente do Firebase, publique a versão atual de `firestore.rules` antes de cadastrar o primeiro certificado.
 
-O catálogo mostra até seis projetos por página, com paginação conforme o filtro ativo.
+Para mudar a ordem de projetos, tecnologias e certificados, arraste pela alça ⠿ à esquerda do nome (ou foque a alça e use as setas). O catálogo mostra até seis projetos por página, com paginação conforme o filtro ativo.
 
 Com o Firebase ativo, o site guarda no navegador a última versão publicada e a exibe enquanto busca a atual, sem mostrar os exemplos de `conteudo.js`. O site está publicado em [wesleypie.tech](https://wesleypie.tech), e `og:image` em `index.html` aponta para `https://wesleypie.tech/assets/og.jpg`; se trocar de domínio, atualize esse endereço.
 
@@ -93,7 +93,7 @@ node prepare-hosting.mjs
 firebase deploy --only hosting,firestore:rules --project ID-DO-PROJETO
 ```
 
-Repita a preparação e o deploy quando alterar código ou o visual. Para mudanças feitas pelo painel, basta usar **Publicar alterações**. [Guia do Firebase Hosting](https://firebase.google.com/docs/hosting/quickstart) · [Criação do site padrão](https://firebase.google.com/docs/hosting/default-site).
+Com o GitHub Actions configurado ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)), cada `git push` na `main` publica o site e as regras sozinho, usando a conta de serviço `github-deploy` guardada no segredo `FIREBASE_SERVICE_ACCOUNT`. Mudanças só em `mcp/` ou em arquivos `.md` não disparam o deploy. Sem o Actions, repita a preparação e o deploy à mão quando alterar código ou o visual. Para mudanças feitas pelo painel, basta usar **Publicar alterações**. [Guia do Firebase Hosting](https://firebase.google.com/docs/hosting/quickstart) · [Criação do site padrão](https://firebase.google.com/docs/hosting/default-site).
 
 ## Imagens
 
