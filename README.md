@@ -17,10 +17,14 @@ Abra **Administração** no rodapé. Após a configuração inicial, entre com s
 - **Visibilidade do repositório** permite exibir **Público** ou **Privado** no cartão e nos detalhes, junto com **Exemplo** quando marcado. Ao publicar como privado, o painel omite o endereço do GitHub. A apresentação do projeto continua pública.
 - **Status do projeto** exibe um ícone e um rótulo no canto superior direito do cartão e nos detalhes. Os ícones têm animações curtas que respeitam a preferência por movimento reduzido. Passe o mouse sobre o selo para ler a explicação. Escolha **Em andamento**, **Em beta**, **Parcialmente concluído**, **Concluído** ou **Sem status**.
 - **Galeria** aceita endereços públicos que abram imagens diretamente e um texto alternativo para cada uma. A partir da segunda imagem, aparecem os controles do carrossel.
-- **Tecnologias** permitem escolher um tipo para o filtro público e, opcionalmente, detalhar a área ou especialidade. Escolha um ícone disponível, que acompanha as cores do tema, ou informe o endereço público de um ícone personalizado. A imagem personalizada mantém suas cores originais e usa a mesma moldura dos outros ícones.
+- **Tecnologias** permitem escolher um tipo para o filtro público e, opcionalmente, detalhar a área ou especialidade. O ícone sai do nome automaticamente (Python, C++, Node.js, Proxmox…) pelo [Simple Icons](https://simpleicons.org) e sempre usa a cor do tema. Se o nome não bater, digite o identificador do Simple Icons no campo **Ícone**; a prévia aparece no próprio item. Um ícone personalizado por endereço também recebe a cor do tema, a menos que **Manter as cores originais** esteja marcado.
+- **E-mail de contato** e **LinkedIn** formam a seção **Contato**. Links vazios, certificados e contato ficam ocultos para visitantes até serem preenchidos.
+- **Importar do GitHub** lista os repositórios públicos de um usuário e cria rascunhos de projeto. Os botões **Subir** e **Descer** definem a ordem no site. **Cópia de segurança** baixa ou carrega todo o conteúdo em JSON. O painel avisa antes de sair com alterações não publicadas.
 - **Certificados** exigem nome e instituição emissora. A data de emissão, o link público da credencial e a imagem são opcionais. Em uma instalação existente do Firebase, publique a versão atual de `firestore.rules` antes de cadastrar o primeiro certificado.
 
 O catálogo mostra até seis projetos por página, com paginação conforme o filtro ativo.
+
+Com o Firebase ativo, o site guarda no navegador a última versão publicada e a exibe enquanto busca a atual, sem mostrar os exemplos de `conteudo.js`. Depois de hospedar, troque `og:image` em `index.html` pelo endereço completo de `assets/og.jpg` para a prévia aparecer ao compartilhar o link.
 
 ### Teste local sem conta no Firebase
 

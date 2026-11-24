@@ -68,15 +68,13 @@ function skillCard(skill) {
   const icon = element('span', 'skill-icon');
   icon.setAttribute('aria-hidden', 'true');
   const customIcon = imageUrl(skill.imagem);
-  if (customIcon) {
+  if (customIcon && skill.imagemOriginal) {
     const image = element('img');
     image.alt = '';
     image.src = customIcon;
     icon.append(image);
   } else {
-    const mark = element('span', 'skill-mark', '</>');
-    mark.dataset.icon = skill.icone ?? '';
-    icon.append(mark);
+    icon.append(skillMark(customIcon ? null : skill.icone || skill.nome, customIcon));
   }
   const label = element('div');
   label.append(element('strong', '', skill.nome), element('p', 'skill-category', skill.categoria || skillTypes[skillType(skill)]));
@@ -316,6 +314,7 @@ function renderProjectPage(announce = true) {
   previousPage.disabled = currentPage === 1;
   nextPage.disabled = currentPage === pageCount;
   pageLabel.textContent = `Página ${currentPage} de ${pageCount}`;
+  revealNew();
   if (announce) {
     projectStatus.textContent = pageCount > 1
       ? `${pageLabel.textContent}. Projetos ${start + 1} a ${end} de ${count}.`
@@ -391,8 +390,6 @@ function certificateCard(certificate) {
   return card;
 }
 
-skillFilter.add(new Option('Todas', 'todos'));
-for (const [type, label] of Object.entries(skillTypes)) skillFilter.add(new Option(label, type));
 skillFilter.addEventListener('change', () => animateFilter(skillResults, filterSkills));
 
 function renderPortfolio(content) {
@@ -406,35 +403,156 @@ function renderPortfolio(content) {
     ? 'Uma seleção demonstrativa de projetos pessoais e acadêmicos.'
     : 'Projetos pessoais e trabalhos da faculdade.';
 
-  const social = [['LinkedIn', content.redes.linkedin], ['GitHub', content.redes.github], ['Currículo', content.curriculo]];
-  document.querySelector('#social-links').replaceChildren(...social.map(([label, value]) => {
+  document.querySelector('#hero-eyebrow').textContent = name ? `OLÁ, EU SOU ${name.toLocaleUpperCase('pt-BR')}` : 'PORTFÓLIO DE PROJETOS';
+
+  // Links vazios ficam ocultos para quem visita.
+  const social = [['LinkedIn', webUrl(content.redes.linkedin)], ['GitHub', webUrl(content.redes.github)], ['Currículo', webUrl(content.curriculo)]];
+  document.querySelector('#social-links').replaceChildren(...social.filter(([, url]) => url).map(([label, url]) => {
     const item = element('li');
-    const url = webUrl(value);
-    item.append(url ? link(label, url) : element('span', 'button secondary', `${label} · a adicionar`));
+    item.append(link(label, url));
     return item;
   }));
+  renderContact(content);
 
-  skillEntries = (content.tecnologias ?? []).map((skill) => ({ type: skillType(skill), card: skillCard(skill) }));
+  skillEntries = (content.tecnologias ?? []).map((skill, index) => ({ type: skillType(skill), card: skillCard(skill), index }));
   skillList.replaceChildren(...skillEntries.map(({ card }) => card));
   document.querySelector('#tecnologias').hidden = !skillEntries.length;
+  const usedTypes = new Set(skillEntries.map(({ type }) => type));
+  const selectedType = usedTypes.has(skillFilter.value) ? skillFilter.value : 'todos';
+  skillFilter.replaceChildren(new Option('Todas', 'todos'), ...Object.entries(skillTypes)
+    .filter(([type]) => usedTypes.has(type)).map(([type, label]) => new Option(label, type)));
+  skillFilter.value = selectedType;
   filterSkills(false);
 
   const certificates = content.certificados ?? [];
   document.querySelector('#certificate-grid').replaceChildren(...certificates.map(certificateCard));
-  document.querySelector('#no-certificates').hidden = certificates.length > 0;
+  document.querySelector('#certificados').hidden = !certificates.length;
+  document.querySelector('[data-nav-certificates]').hidden = !certificates.length;
 
   entries = content.projetos.map((project) => ({ project, card: null }));
   renderProjectPage(false);
+  revealNew();
+}
+
+const contactStatus = document.querySelector('#contact-status');
+
+function renderContact(content) {
+  const email = emailAddress(content.redes.email);
+  const linkedin = webUrl(content.redes.linkedin);
+  const actions = [];
+  if (email) {
+    const mail = link('Enviar e-mail', `mailto:${email}`);
+    mail.className = 'button primary';
+    const copy = element('button', 'button secondary', 'Copiar e-mail');
+    copy.type = 'button';
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(email);
+        contactStatus.textContent = 'E-mail copiado.';
+      } catch {
+        contactStatus.textContent = email;
+      }
+    });
+    actions.push(mail, copy);
+  }
+  if (linkedin) actions.push(link('LinkedIn', linkedin));
+  document.querySelector('#contact-actions').replaceChildren(...actions);
+  document.querySelector('#contato').hidden = !actions.length;
+  document.querySelector('[data-nav-contact]').hidden = !actions.length;
 }
 
 for (const filter of filters) filter.addEventListener('click', () => selectFilter(filter));
 previousPage.addEventListener('click', () => moveProjectPage(-1));
 nextPage.addEventListener('click', () => moveProjectPage(1));
-renderPortfolio(portfolio);
+// Animações de entrada, destaque que segue o cursor e menu que acompanha a rolagem.
+const revealObserver = 'IntersectionObserver' in window ? new IntersectionObserver((items) => {
+  for (const item of items) {
+    if (!item.isIntersecting) continue;
+    item.target.classList.add('is-visible');
+    revealObserver.unobserve(item.target);
+    setTimeout(() => item.target.style.removeProperty('--delay'), 1200);
+  }
+}, { rootMargin: '0px 0px -8% 0px', threshold: .08 }) : null;
+
+if (revealObserver) root.classList.add('reveal-ready');
+
+function revealNew() {
+  const targets = document.querySelectorAll('[data-reveal]:not(.is-visible), .project-card:not(.is-visible), .skill:not(.is-visible), .certificate-card:not(.is-visible)');
+  targets.forEach((target, index) => {
+    if (!target.hasAttribute('data-reveal')) {
+      target.setAttribute('data-reveal', '');
+      target.style.setProperty('--delay', `${Math.min(index % 6, 5) * 70}ms`);
+    }
+    if (revealObserver && !reduceMotion.matches) revealObserver.observe(target);
+    else target.classList.add('is-visible');
+  });
+}
+
+document.addEventListener('pointermove', (event) => {
+  const card = event.target.closest?.('.project-card, .skill, .certificate-card, .contact-card');
+  if (!card) return;
+  const box = card.getBoundingClientRect();
+  card.style.setProperty('--mx', `${event.clientX - box.left}px`);
+  card.style.setProperty('--my', `${event.clientY - box.top}px`);
+}, { passive: true });
+
+const heroArt = document.querySelector('.hero-art');
+if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  heroArt.addEventListener('pointermove', (event) => {
+    if (reduceMotion.matches) return;
+    const box = heroArt.getBoundingClientRect();
+    const x = (event.clientX - box.left) / box.width - .5;
+    const y = (event.clientY - box.top) / box.height - .5;
+    heroArt.style.setProperty('--tilt-x', `${(-y * 6).toFixed(2)}deg`);
+    heroArt.style.setProperty('--tilt-y', `${(x * 8).toFixed(2)}deg`);
+  });
+  heroArt.addEventListener('pointerleave', () => {
+    heroArt.style.removeProperty('--tilt-x');
+    heroArt.style.removeProperty('--tilt-y');
+  });
+}
+
+if (revealObserver) {
+  const sections = [...document.querySelectorAll('main > section[id]')];
+  const spy = new IntersectionObserver((items) => {
+    const visible = items.filter((item) => item.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+    if (!visible) return;
+    for (const item of document.querySelectorAll('.main-nav a')) {
+      if (item.hash === `#${visible.target.id}`) item.setAttribute('aria-current', 'location');
+      else item.removeAttribute('aria-current');
+    }
+  }, { rootMargin: '-35% 0px -55% 0px' });
+  sections.forEach((section) => spy.observe(section));
+}
+
+// Com o Firebase ativo, mostra a última versão vista (ou um esqueleto) em vez dos exemplos de conteudo.js.
+const cacheKey = 'portfolio-cache';
+function cachedPortfolio() {
+  try {
+    return JSON.parse(localStorage.getItem(cacheKey))?.content ?? null;
+  } catch {
+    return null;
+  }
+}
 
 if (globalThis.portfolioCloud) {
+  const cached = cachedPortfolio();
+  if (cached) renderPortfolio(cached);
+  else {
+    root.classList.add('is-loading');
+    grid.replaceChildren(...Array.from({ length: 3 }, () => element('div', 'project-card skeleton')));
+  }
   import('./cloud.mjs')
     .then(({ readPortfolio }) => readPortfolio())
-    .then(({ content }) => { if (content) renderPortfolio(content); })
-    .catch((error) => console.error('Falha ao carregar o perfil publicado.', error));
+    .then(({ content }) => {
+      renderPortfolio(content ?? portfolio);
+      try { localStorage.setItem(cacheKey, JSON.stringify({ content })); } catch { /* Sem cache. */ }
+    })
+    .catch((error) => {
+      console.error('Falha ao carregar o perfil publicado.', error);
+      if (!cached) renderPortfolio(portfolio);
+    })
+    .finally(() => root.classList.remove('is-loading'));
+} else {
+  renderPortfolio(portfolio);
 }

@@ -9,12 +9,24 @@ const portfolio = {
   redes: {
     linkedin: '', // Ex.: https://www.linkedin.com/in/seu-perfil/
     github: '', // Ex.: https://github.com/seu-usuario
+    email: '', // Ex.: voce@exemplo.com
   },
   certificados: [],
+  // O ícone sai do nome automaticamente. Use "icone" só quando o nome não bater com o Simple Icons.
   tecnologias: [
-    { nome: 'Windows', tipo: 'sistema', categoria: 'Sistema operacional', icone: 'windows' },
-    { nome: 'Raspberry Pi OS', tipo: 'sistema', categoria: 'Sistema operacional', icone: 'raspberry' },
-    { nome: 'Docker', tipo: 'ferramenta', categoria: 'Containers', icone: 'docker' },
+    { nome: 'Python', tipo: 'linguagem' },
+    { nome: 'JavaScript', tipo: 'linguagem' },
+    { nome: 'C++', tipo: 'linguagem' },
+    { nome: 'Java', tipo: 'linguagem' },
+    { nome: 'Node.js', tipo: 'biblioteca', categoria: 'Back-end' },
+    { nome: 'Firebase', tipo: 'ferramenta', categoria: 'Back-end como serviço' },
+    { nome: 'Supabase', tipo: 'ferramenta', categoria: 'Back-end como serviço' },
+    { nome: 'SQLite', tipo: 'ferramenta', categoria: 'Banco de dados' },
+    { nome: 'Proxmox', tipo: 'sistema', categoria: 'Virtualização' },
+    { nome: 'LXC', tipo: 'ferramenta', categoria: 'Containers' },
+    { nome: 'Docker', tipo: 'ferramenta', categoria: 'Containers' },
+    { nome: 'Raspberry Pi', tipo: 'hardware', categoria: 'Computação embarcada' },
+    { nome: 'Windows', tipo: 'sistema', categoria: 'Sistema operacional' },
   ],
   projetos: [
     {

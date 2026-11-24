@@ -55,10 +55,24 @@ function entry(title, emptyTitle) {
   const actions = node('div', 'admin-actions');
   root.append(summary, body);
   body.append(fields, actions);
+  const label = node('span', 'entry-title', title || emptyTitle);
+  summary.replaceChildren(label);
   function bindTitle(input) {
-    input.addEventListener('input', () => { summary.textContent = input.value.trim() || emptyTitle; });
+    input.addEventListener('input', () => { label.textContent = input.value.trim() || emptyTitle; });
   }
+  actions.append(
+    button('↑ Subir', () => moveEntry(root, -1)),
+    button('↓ Descer', () => moveEntry(root, 1)),
+  );
   return { root, summary, body, fields, actions, bindTitle };
+}
+
+function moveEntry(root, step) {
+  const target = step < 0 ? root.previousElementSibling : root.nextElementSibling;
+  if (!target) return;
+  if (step < 0) target.before(root); else target.after(root);
+  markDirty();
+  root.querySelector('summary').focus();
 }
 
 function removeEntry(root, fallback) {
@@ -73,7 +87,10 @@ const certificateAdd = document.querySelector('#add-certificate');
 const categories = [['pessoal', 'Pessoal'], ['faculdade', 'Faculdade']];
 const visibilities = [['', 'Sem selo'], ...Object.entries(projectVisibility)];
 const stages = [['', 'Sem status'], ...Object.entries(projectStages).map(([value, { label }]) => [value, label])];
-const icons = [['', 'Genérico'], ['windows', 'Windows'], ['raspberry', 'Raspberry Pi OS'], ['docker', 'Docker']];
+const iconList = node('datalist');
+iconList.id = 'icon-suggestions';
+for (const [slug, label] of Object.entries({ ...builtInIcons, ...iconSuggestions })) iconList.append(new Option(label, slug));
+document.body.append(iconList);
 
 function projectEntry(project = {}, open = false) {
   const { root, body, fields, actions, bindTitle } = entry(project.titulo, 'Novo projeto');
@@ -138,10 +155,33 @@ function skillEntry(skill = {}, open = false) {
     field('tipo', 'Tipo de tecnologia', skillType(skill), { choices: Object.entries(skillTypes) }),
     field('categoria', 'Área ou especialidade (opcional)', skill.categoria, { limit: 100, placeholder: 'Ex.: Containers' }),
     field('experiencia', 'Como você usa', skill.experiencia, { rows: 3, full: true, limit: 700 }),
-    field('icone', 'Ícone', skill.icone, { choices: icons }),
+    field('icone', 'Ícone (opcional, sai do nome)', skill.icone, { limit: 60, placeholder: 'Ex.: python, cplusplus, proxmox' }),
     field('imagem', 'Endereço de um ícone personalizado', skill.imagem, { limit: 500, placeholder: 'https://…' }),
+    field('imagemOriginal', 'Manter as cores originais da imagem personalizada', skill.imagemOriginal, { type: 'checkbox', full: true }),
+    node('p', 'field-hint full-field', 'O ícone é escolhido pelo nome da tecnologia e pinta com a cor do tema. Se não aparecer, procure o nome em simpleicons.org e digite-o em “Ícone”.'),
   );
-  bindTitle(fields.querySelector('input'));
+  const iconInput = fields.querySelector('[name="icone"]');
+  iconInput.setAttribute('list', 'icon-suggestions');
+  const nameInput = fields.querySelector('input');
+  const imageInput = fields.querySelector('[name="imagem"]');
+  const keepColors = fields.querySelector('[name="imagemOriginal"]');
+  const preview = node('span', 'skill-icon entry-icon');
+  preview.setAttribute('aria-hidden', 'true');
+  root.querySelector('summary').prepend(preview);
+  function updatePreview() {
+    const custom = imageUrl(imageInput.value.trim());
+    if (custom && keepColors.checked) {
+      const image = node('img');
+      image.alt = '';
+      image.src = custom;
+      preview.replaceChildren(image);
+    } else {
+      preview.replaceChildren(skillMark(custom ? null : iconInput.value || nameInput.value, custom));
+    }
+  }
+  for (const input of [iconInput, nameInput, imageInput, keepColors]) input.addEventListener('change', updatePreview);
+  updatePreview();
+  bindTitle(nameInput);
   actions.append(button('Remover tecnologia', () => removeEntry(root, skillAdd)));
   return root;
 }
@@ -215,6 +255,7 @@ function collectContent() {
     nome: fieldValue(item, 'nome'), tipo: fieldValue(item, 'tipo'), categoria: fieldValue(item, 'categoria'),
     experiencia: fieldValue(item, 'experiencia'), icone: fieldValue(item, 'icone'),
     imagem: fieldValue(item, 'imagem', imageUrl),
+    ...(item.querySelector('[name="imagemOriginal"]').checked ? { imagemOriginal: true } : {}),
   }));
   const certificates = [...certificateEditor.children].map((item) => ({
     titulo: fieldValue(item, 'titulo'), instituicao: fieldValue(item, 'instituicao'),
@@ -224,7 +265,7 @@ function collectContent() {
   return {
     nome: value('nome'), introducao: value('introducao'), curriculo: value('curriculo', webUrl),
     sobre: { titulo: value('titulo'), descricao: value('descricao') },
-    redes: { linkedin: value('linkedin', webUrl), github: value('github', webUrl) },
+    redes: { linkedin: value('linkedin', webUrl), github: value('github', webUrl), email: value('email', emailAddress) },
     tecnologias: skills, projetos: projects,
     ...(certificates.length ? { certificados: certificates } : {}),
   };
@@ -235,12 +276,13 @@ function renderEditor(content) {
   const values = {
     nome: content.nome, introducao: content.introducao, titulo: content.sobre.titulo,
     descricao: content.sobre.descricao, linkedin: content.redes.linkedin, github: content.redes.github,
-    curriculo: content.curriculo ?? '',
+    email: content.redes.email ?? '', curriculo: content.curriculo ?? '',
   };
   for (const [name, value] of Object.entries(values)) profile.querySelector(`[name="${name}"]`).value = value;
   projectEditor.replaceChildren(...content.projetos.map((project) => projectEntry(project)));
   skillEditor.replaceChildren(...content.tecnologias.map((skill) => skillEntry(skill)));
   certificateEditor.replaceChildren(...(content.certificados ?? []).map((certificate) => certificateEntry(certificate)));
+  dirty = false;
 }
 
 function showStatus(message) {
@@ -324,6 +366,7 @@ editor.addEventListener('submit', async (event) => {
     const next = await cloud.publishPortfolio(content, revision);
     if (sessionVersion !== version) return;
     revision = next;
+    dirty = false;
     publishStatus('Alterações publicadas. Abra o site para conferir.');
   } catch (error) {
     if (sessionVersion === version) publishStatus(error.code
@@ -345,3 +388,117 @@ if (!globalThis.portfolioCloud) {
     loginButton.disabled = false;
   }).catch(() => showError('Não foi possível conectar ao Firebase. Confira a configuração do projeto e a conexão.'));
 }
+
+
+// Alterações não publicadas: avisa antes de sair da página.
+let dirty = false;
+function markDirty() {
+  dirty = true;
+  publishFeedback.classList.remove('admin-error');
+  publishFeedback.textContent = 'Há alterações não publicadas.';
+}
+editor.addEventListener('input', markDirty);
+editor.addEventListener('change', markDirty);
+window.addEventListener('beforeunload', (event) => {
+  if (dirty && !editor.hidden) event.preventDefault();
+});
+
+// Importação de repositórios públicos do GitHub como rascunhos de projeto.
+const githubDialog = document.querySelector('#github-dialog');
+const githubForm = document.querySelector('#github-form');
+const githubList = document.querySelector('#github-list');
+const githubStatus = document.querySelector('#github-status');
+let githubRepos = [];
+
+document.querySelector('#import-github').addEventListener('click', () => {
+  const profile = webUrl(editor.querySelector('[name="github"]').value.trim());
+  const user = profile && new URL(profile).hostname === 'github.com' ? new URL(profile).pathname.split('/').filter(Boolean)[0] ?? '' : '';
+  githubForm.elements.user.value ||= user;
+  githubDialog.showModal();
+});
+
+githubForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const user = githubForm.elements.user.value.trim();
+  if (!/^[a-z\d](?:[a-z\d-]{0,38})$/i.test(user)) {
+    githubStatus.textContent = 'Digite um nome de usuário do GitHub válido.';
+    return;
+  }
+  githubStatus.textContent = 'Buscando repositórios…';
+  githubList.replaceChildren();
+  try {
+    const response = await fetch(`https://api.github.com/users/${encodeURIComponent(user)}/repos?per_page=100&sort=updated`, { headers: { Accept: 'application/vnd.github+json' } });
+    if (!response.ok) throw new Error(response.status === 404 ? 'Usuário não encontrado.' : `O GitHub respondeu com erro ${response.status}.`);
+    const existing = new Set([...projectEditor.querySelectorAll('[name="repositorio"]')].map((input) => input.value.trim().toLowerCase().replace(/\/+$/, '')));
+    githubRepos = (await response.json()).filter((repo) => !repo.fork);
+    githubList.replaceChildren(...githubRepos.map((repo, index) => {
+      const label = node('label', 'github-repo');
+      const check = node('input');
+      check.type = 'checkbox';
+      check.value = index;
+      const already = existing.has(repo.html_url.toLowerCase());
+      check.disabled = already;
+      const text = node('span');
+      text.append(node('strong', '', repo.name), node('small', '', already ? 'Já está no portfólio' : repo.description || 'Sem descrição'));
+      label.append(check, text);
+      return label;
+    }));
+    githubStatus.textContent = githubRepos.length ? `${githubRepos.length} repositórios públicos encontrados. Marque os que quer adicionar.` : 'Nenhum repositório público encontrado.';
+  } catch (error) {
+    githubStatus.textContent = error.message.startsWith('O GitHub') || error.message.startsWith('Usuário') ? error.message : 'Não foi possível consultar o GitHub agora.';
+  }
+});
+
+document.querySelector('#github-add').addEventListener('click', () => {
+  const chosen = [...githubList.querySelectorAll('input:checked')].map((input) => githubRepos[Number(input.value)]);
+  for (const repo of chosen) {
+    if (projectEditor.children.length >= 80) break;
+    const title = repo.name.replace(/[-_]+/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
+    projectEditor.append(projectEntry({
+      titulo: title,
+      categoria: 'pessoal',
+      resumo: (repo.description || `Repositório ${repo.name}.`).slice(0, 320),
+      descricao: repo.description || '',
+      tecnologias: [repo.language, ...(repo.topics ?? [])].filter(Boolean).slice(0, 8),
+      visibilidade: 'publico',
+      repositorio: repo.html_url,
+      demo: webUrl(repo.homepage) ?? '',
+    }, true));
+  }
+  if (chosen.length) {
+    markDirty();
+    showStatus(`${chosen.length} projeto(s) adicionados como rascunho. Revise o texto e publique.`);
+  }
+  githubDialog.close();
+});
+
+// Cópia de segurança do conteúdo em JSON.
+document.querySelector('#export-json').addEventListener('click', () => {
+  try {
+    const blob = new Blob([JSON.stringify(collectContent(), null, 2)], { type: 'application/json' });
+    const anchor = node('a');
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download = `portfolio-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(anchor.href), 1000);
+  } catch (error) {
+    showError(error.message);
+  }
+});
+
+const importInput = document.querySelector('#import-json');
+importInput.addEventListener('change', async () => {
+  const [file] = importInput.files;
+  importInput.value = '';
+  if (!file) return;
+  try {
+    const content = JSON.parse(await file.text());
+    if (typeof content?.sobre !== 'object' || !Array.isArray(content.projetos) || !Array.isArray(content.tecnologias)) throw new Error();
+    content.redes ??= { linkedin: '', github: '', email: '' };
+    renderEditor(content);
+    markDirty();
+    showStatus('Cópia carregada no editor. Confira e publique para aplicar no site.');
+  } catch {
+    showError('O arquivo não é uma cópia válida do portfólio.');
+  }
+});

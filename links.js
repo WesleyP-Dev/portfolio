@@ -18,3 +18,8 @@ function githubUrl(value) {
 function imageUrl(value) {
   return /^\.\/assets\/[\w./-]+$/i.test(value) && !value.split('/').includes('..') ? value : webUrl(value);
 }
+
+function emailAddress(value) {
+  const text = String(value ?? '').trim();
+  return /^[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i.test(text) && text.length <= 254 ? text : null;
+}
