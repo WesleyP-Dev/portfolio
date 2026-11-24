@@ -12,6 +12,7 @@ const projectStages = {
   andamento: { label: 'Em andamento', description: 'O projeto está em desenvolvimento e ainda tem funcionalidades sendo implementadas.' },
   beta: { label: 'Em beta', description: 'O projeto está em fase de testes e pode receber ajustes antes da versão final.' },
   parcial: { label: 'Parcialmente concluído', description: 'Parte do escopo foi entregue e ainda há itens pendentes.' },
+  pausado: { label: 'Pausado', description: 'O desenvolvimento está parado por enquanto e pode ser retomado.' },
   concluido: { label: 'Concluído', description: 'O escopo previsto para o projeto foi entregue.' },
 };
 

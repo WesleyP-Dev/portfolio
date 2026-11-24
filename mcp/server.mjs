@@ -26,7 +26,7 @@ const url = (description) => ({ type: 'string', description });
 const projectFields = {
   titulo: { type: 'string', maxLength: 120, description: 'Título do projeto.' },
   categoria: { type: 'string', enum: site.categories },
-  status: { type: 'string', enum: ['', ...site.stages], description: 'andamento, beta, parcial, concluido ou vazio (sem status).' },
+  status: { type: 'string', enum: ['', ...site.stages], description: 'andamento, beta, parcial, pausado, concluido ou vazio (sem status).' },
   resumo: { type: 'string', maxLength: 320, description: 'Texto curto do cartão. Obrigatório ao criar.' },
   descricao: { type: 'string', maxLength: 6000, description: 'Descrição completa exibida nos detalhes.' },
   tecnologias: { type: 'array', items: { type: 'string' }, description: 'Nomes das tecnologias usadas (até 500 caracteres somados).' },
