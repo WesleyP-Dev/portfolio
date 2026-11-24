@@ -4,8 +4,46 @@ const paletteButtons = [...document.querySelectorAll('[data-palette-option]')];
 const filters = [...document.querySelectorAll('[data-filter]')];
 const grid = document.querySelector('#project-grid');
 const dialog = document.querySelector('#project-dialog');
-const categories = { pessoal: 'Pessoal', faculdade: 'Faculdade' };
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const languageButtons = [...document.querySelectorAll('[data-language-option]')];
+let lang = root.lang === 'en' ? 'en' : 'pt';
+let currentContent = null;
+const t = () => uiText[lang];
+
+// Conteúdo no idioma escolhido: em inglês usa o campo "en" do item, se preenchido; senão, o português.
+function tr(item, path) {
+  const read = (object) => path.split('.').reduce((value, key) => value?.[key], object);
+  const english = lang === 'en' ? read(item?.en) : '';
+  return typeof english === 'string' && english.trim() ? english : read(item) ?? '';
+}
+const stageInfo = (status) => (lang === 'en' ? uiText.en.stages[status] : projectStages[status]);
+const skillTypeLabel = (type) => (lang === 'en' ? uiText.en.skillTypes[type] : skillTypes[type]);
+const visibilityLabel = (value) => (lang === 'en' ? uiText.en.visibility[value] : projectVisibility[value]);
+
+function applyStaticTexts() {
+  const texts = t();
+  for (const node of document.querySelectorAll('[data-i18n]')) node.textContent = texts[node.dataset.i18n];
+  for (const node of document.querySelectorAll('[data-i18n-html]')) node.innerHTML = texts[node.dataset.i18nHtml];
+  for (const node of document.querySelectorAll('[data-i18n-aria]')) node.setAttribute('aria-label', texts[node.dataset.i18nAria]);
+  document.querySelector('meta[name="description"]').content = texts.description;
+  for (const button of languageButtons) button.setAttribute('aria-pressed', String(button.dataset.languageOption === lang));
+  updateThemeButton();
+}
+
+function setLanguage(next) {
+  if (next === lang || !languages.includes(next)) return;
+  lang = next;
+  root.lang = lang === 'en' ? 'en' : 'pt-BR';
+  try { localStorage.setItem('portfolio-lang', lang); } catch { /* A escolha ainda vale nesta página. */ }
+  const address = new URL(location.href);
+  if (address.searchParams.has('lang')) {
+    address.searchParams.set('lang', lang);
+    history.replaceState(history.state, '', address);
+  }
+  if (dialog.open) dialog.close();
+  applyStaticTexts();
+  if (currentContent) renderPortfolio(currentContent);
+}
 
 function element(tag, className, content) {
   const node = document.createElement(tag);
@@ -21,12 +59,13 @@ function link(label, url) {
 }
 
 function updateThemeButton() {
-  const label = root.dataset.theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro';
+  const label = root.dataset.theme === 'dark' ? t().themeToLight : t().themeToDark;
   themeButton.setAttribute('aria-label', label);
   themeButton.title = label;
 }
 
-updateThemeButton();
+applyStaticTexts();
+for (const button of languageButtons) button.addEventListener('click', () => setLanguage(button.dataset.languageOption));
 themeButton.addEventListener('click', () => {
   root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
   updateThemeButton();
@@ -79,11 +118,12 @@ function skillCard(skill) {
   const label = element('div');
   // Permite quebrar linha depois de / ) , em textos longos sem espaço, como "RaspOS(Debian)/Ubuntu".
   const breakable = (text) => String(text ?? '').replace(/([/),])(?=\S)/g, '$1\u200b');
-  label.append(element('strong', '', breakable(skill.nome)), element('p', 'skill-category', breakable(skill.categoria || skillTypes[skillType(skill)])));
-  if (skill.experiencia) {
+  label.append(element('strong', '', breakable(skill.nome)), element('p', 'skill-category', breakable(tr(skill, 'categoria') || skillTypeLabel(skillType(skill)))));
+  const experience = tr(skill, 'experiencia');
+  if (experience) {
     // O texto de "como eu uso" fica recolhido: o cartão continua compacto e só cresce quando o visitante abre.
     const noteId = `skill-note-${++skillNoteCount}`;
-    const toggle = element('button', 'skill-more', 'Como uso');
+    const toggle = element('button', 'skill-more', t().howIUse);
     toggle.type = 'button';
     toggle.setAttribute('aria-expanded', 'false');
     toggle.setAttribute('aria-controls', noteId);
@@ -92,7 +132,7 @@ function skillCard(skill) {
     toggle.append(chevron);
     const note = element('div', 'skill-note-wrap');
     note.id = noteId;
-    note.append(element('p', 'skill-note', skill.experiencia));
+    note.append(element('p', 'skill-note', experience));
     toggle.addEventListener('click', () => {
       const open = toggle.getAttribute('aria-expanded') !== 'true';
       toggle.setAttribute('aria-expanded', String(open));
@@ -156,8 +196,8 @@ async function loadMedia(src, alt) {
 }
 
 function gallery(project, lazy = true) {
-  const { imagens = [], titulo: title } = project;
-  const images = imagens.filter((image) => imageUrl(image.src));
+  const title = tr(project, 'titulo');
+  const images = (project.imagens ?? []).filter((image) => imageUrl(image.src)).map((image) => ({ src: image.src, alt: tr(image, 'alt') }));
   if (!images.length) return null;
 
   const figure = element('figure', 'gallery');
@@ -207,7 +247,7 @@ function gallery(project, lazy = true) {
     } catch {
       if (request === requestId) {
         requested = current;
-        status.textContent = `Não foi possível carregar a imagem ${index + 1}.`;
+        status.textContent = t().imageFailed(index + 1);
       }
       return;
     }
@@ -232,17 +272,17 @@ function gallery(project, lazy = true) {
     image = incoming;
     current = index;
     count.textContent = `${current + 1}/${images.length}`;
-    status.textContent = `Imagem ${current + 1} de ${images.length}. ${images[index].alt}`;
+    status.textContent = t().imageOf(current + 1, images.length, images[index].alt);
   }
 
   const controls = element('div', 'gallery-controls');
   controls.setAttribute('role', 'group');
-  controls.setAttribute('aria-label', `Galeria de ${title}`);
+  controls.setAttribute('aria-label', t().galleryOf(title));
   const previous = element('button', 'icon-button', '‹');
   const next = element('button', 'icon-button', '›');
   previous.type = next.type = 'button';
-  previous.setAttribute('aria-label', `Imagem anterior de ${title}`);
-  next.setAttribute('aria-label', `Próxima imagem de ${title}`);
+  previous.setAttribute('aria-label', t().previousImage(title));
+  next.setAttribute('aria-label', t().nextImage(title));
   previous.addEventListener('click', () => move(-1));
   next.addEventListener('click', () => move(1));
   controls.addEventListener('keydown', (event) => {
@@ -261,10 +301,10 @@ function technologyItems(project) {
 }
 
 function projectBadges(project) {
-  const badges = [element('p', 'category', categories[project.categoria])];
-  if (project.demonstracao) badges.push(element('span', 'project-badge', 'Exemplo'));
+  const badges = [element('p', 'category', t().categories[project.categoria])];
+  if (project.demonstracao) badges.push(element('span', 'project-badge', t().example));
   if (Object.hasOwn(projectVisibility, project.visibilidade)) {
-    badges.push(element('span', 'project-badge', projectVisibility[project.visibilidade]));
+    badges.push(element('span', 'project-badge', visibilityLabel(project.visibilidade)));
   }
   return badges;
 }
@@ -275,7 +315,7 @@ function projectRepository(project) {
 
 function projectStage(project) {
   if (!Object.hasOwn(projectStages, project.status)) return null;
-  const { label, description } = projectStages[project.status];
+  const { label, description } = stageInfo(project.status);
   const badge = element('span', 'project-stage');
   badge.dataset.stage = project.status;
   badge.title = description;
@@ -290,8 +330,8 @@ function openProject(project) {
   const stage = projectStage(project);
   if (stage) badges.push(stage);
   document.querySelector('#dialog-category').replaceChildren(...badges);
-  document.querySelector('#dialog-title').textContent = project.titulo;
-  document.querySelector('#dialog-description').textContent = project.descricao || project.resumo;
+  document.querySelector('#dialog-title').textContent = tr(project, 'titulo');
+  document.querySelector('#dialog-description').textContent = tr(project, 'descricao') || tr(project, 'resumo');
 
   const projectGallery = gallery(project, false);
   document.querySelector('#dialog-gallery').replaceChildren(...(projectGallery ? [projectGallery] : []));
@@ -303,8 +343,8 @@ function openProject(project) {
   const links = [];
   const repository = projectRepository(project);
   const demo = webUrl(project.demo);
-  if (repository) links.push(link('Abrir no GitHub', repository));
-  if (demo) links.push(link('Abrir demonstração', demo));
+  if (repository) links.push(link(t().openGithub, repository));
+  if (demo) links.push(link(t().openDemo, demo));
   document.querySelector('#dialog-links').replaceChildren(...links);
   dialog.showModal();
 }
@@ -319,19 +359,20 @@ function projectCard(project) {
   const content = element('div', 'card-content');
   const meta = element('div', 'card-meta');
   meta.append(...projectBadges(project));
-  content.append(meta, element('h3', '', project.titulo), element('p', 'card-summary', project.resumo));
+  const title = tr(project, 'titulo');
+  content.append(meta, element('h3', '', title), element('p', 'card-summary', tr(project, 'resumo')));
 
   const technologies = technologyItems(project);
   if (technologies.length) {
     const tags = element('ul', 'tags');
-    tags.setAttribute('aria-label', 'Tecnologias');
+    tags.setAttribute('aria-label', t().technologies);
     tags.append(...technologies);
     content.append(tags);
   }
 
-  const details = element('button', 'details', 'Ver detalhes');
+  const details = element('button', 'details', t().details);
   details.type = 'button';
-  details.setAttribute('aria-label', `Ver detalhes de ${project.titulo}`);
+  details.setAttribute('aria-label', t().detailsOf(title));
   const plus = element('span', '', '+');
   plus.setAttribute('aria-hidden', 'true');
   details.append(plus);
@@ -342,7 +383,7 @@ function projectCard(project) {
   if (repository) {
     const source = element('a', 'details', 'GitHub');
     source.href = repository;
-    source.setAttribute('aria-label', `Abrir ${project.titulo} no GitHub`);
+    source.setAttribute('aria-label', t().openOnGithub(title));
     actions.append(source);
   }
   content.append(actions);
@@ -397,12 +438,12 @@ function renderProjectPage(announce = true) {
   pagination.hidden = pageCount === 1;
   previousPage.disabled = currentPage === 1;
   nextPage.disabled = currentPage === pageCount;
-  pageLabel.textContent = `Página ${currentPage} de ${pageCount}`;
+  pageLabel.textContent = t().page(currentPage, pageCount);
   revealNew();
   if (announce) {
     projectStatus.textContent = pageCount > 1
-      ? `${pageLabel.textContent}. Projetos ${start + 1} a ${end} de ${count}.`
-      : count === 1 ? '1 projeto exibido.' : `${count} projetos exibidos.`;
+      ? t().projectRange(pageLabel.textContent, start + 1, end, count)
+      : t().projectCount(count);
   }
 }
 
@@ -429,20 +470,20 @@ function filterSkills(announce = true) {
     if (visible) count += 1;
   }
   noSkills.hidden = count > 0;
-  if (announce) skillStatus.textContent = count === 1 ? '1 tecnologia exibida.' : `${count} tecnologias exibidas.`;
+  if (announce) skillStatus.textContent = t().skillCount(count);
 }
 
-const certificateDate = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long', timeZone: 'UTC' });
 
 function certificateCard(certificate) {
   const card = element('article', 'certificate-card');
+  const title = tr(certificate, 'titulo');
   const imagePath = imageUrl(certificate.imagem);
   if (imagePath) {
     const preview = element('a', 'certificate-preview');
     resolveImage(imagePath).then((url) => { preview.href = url; }).catch(() => {});
     preview.target = '_blank';
     preview.rel = 'noopener';
-    preview.setAttribute('aria-label', `Ver imagem do certificado ${certificate.titulo}`);
+    preview.setAttribute('aria-label', t().certificateImage(title));
     const image = element('img');
     image.alt = '';
     image.loading = 'lazy';
@@ -455,12 +496,12 @@ function certificateCard(certificate) {
   const content = element('div', 'certificate-content');
   const emblem = element('span', 'certificate-emblem');
   emblem.setAttribute('aria-hidden', 'true');
-  content.append(emblem, element('h3', '', certificate.titulo), element('p', 'certificate-issuer', certificate.instituicao));
+  content.append(emblem, element('h3', '', title), element('p', 'certificate-issuer', certificate.instituicao));
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(certificate.data)) {
     const date = new Date(`${certificate.data}T00:00:00Z`);
     if (Number.isFinite(date.valueOf())) {
-      const issued = element('time', 'certificate-issued', certificateDate.format(date));
+      const issued = element('time', 'certificate-issued', new Intl.DateTimeFormat(t().locale, { dateStyle: 'long', timeZone: 'UTC' }).format(date));
       issued.dateTime = certificate.data;
       content.append(issued);
     }
@@ -468,8 +509,8 @@ function certificateCard(certificate) {
 
   const credential = webUrl(certificate.credencial);
   if (credential) {
-    const credentialLink = link('Ver credencial', credential);
-    credentialLink.setAttribute('aria-label', `Ver credencial de ${certificate.titulo}`);
+    const credentialLink = link(t().credential, credential);
+    credentialLink.setAttribute('aria-label', t().credentialOf(title));
     content.append(credentialLink);
   }
   card.append(content);
@@ -479,20 +520,20 @@ function certificateCard(certificate) {
 skillFilter.addEventListener('change', () => animateFilter(skillResults, filterSkills));
 
 function renderPortfolio(content) {
+  currentContent = content;
+  const texts = t();
   const name = content.nome.trim();
-  for (const brand of document.querySelectorAll('[data-brand]')) brand.textContent = name || 'Portfólio';
-  document.title = name ? `${name} · Portfólio` : 'Portfólio · Projetos e sobre mim';
-  document.querySelector('#intro').textContent = content.introducao;
-  document.querySelector('#about-lead').textContent = content.sobre.titulo;
-  document.querySelector('#about-description').textContent = content.sobre.descricao;
-  document.querySelector('#project-intro').textContent = content.projetos.some((project) => project.demonstracao)
-    ? 'Uma seleção demonstrativa de projetos pessoais e acadêmicos.'
-    : 'Projetos pessoais e trabalhos da faculdade.';
+  for (const brand of document.querySelectorAll('[data-brand]')) brand.textContent = name || texts.brand;
+  document.title = name ? texts.titleWithName(name) : texts.title;
+  document.querySelector('#intro').textContent = tr(content, 'introducao');
+  document.querySelector('#about-lead').textContent = tr(content, 'sobre.titulo');
+  document.querySelector('#about-description').textContent = tr(content, 'sobre.descricao');
+  document.querySelector('#project-intro').textContent = content.projetos.some((project) => project.demonstracao) ? texts.projectsDemo : texts.projectsReal;
 
-  document.querySelector('#hero-eyebrow').textContent = name ? `OLÁ, EU SOU ${name.toLocaleUpperCase('pt-BR')}` : 'PORTFÓLIO DE PROJETOS';
+  document.querySelector('#hero-eyebrow').textContent = name ? texts.eyebrowName(name) : texts.eyebrow;
 
   // Links vazios ficam ocultos para quem visita.
-  const social = [['LinkedIn', webUrl(content.redes.linkedin)], ['GitHub', webUrl(content.redes.github)], ['Currículo', webUrl(content.curriculo)]];
+  const social = [['LinkedIn', webUrl(content.redes.linkedin)], ['GitHub', webUrl(content.redes.github)], [texts.resume, webUrl(content.curriculo)]];
   document.querySelector('#social-links').replaceChildren(...social.filter(([, url]) => url).map(([label, url]) => {
     const item = element('li');
     item.append(link(label, url));
@@ -505,8 +546,8 @@ function renderPortfolio(content) {
   document.querySelector('#tecnologias').hidden = !skillEntries.length;
   const usedTypes = new Set(skillEntries.map(({ type }) => type));
   const selectedType = usedTypes.has(skillFilter.value) ? skillFilter.value : 'todos';
-  skillFilter.replaceChildren(new Option('Todas', 'todos'), ...Object.entries(skillTypes)
-    .filter(([type]) => usedTypes.has(type)).map(([type, label]) => new Option(label, type)));
+  skillFilter.replaceChildren(new Option(texts.skillAll, 'todos'), ...Object.keys(skillTypes)
+    .filter((type) => usedTypes.has(type)).map((type) => new Option(skillTypeLabel(type), type)));
   skillFilter.value = selectedType;
   filterSkills(false);
 
@@ -527,14 +568,14 @@ function renderContact(content) {
   const linkedin = webUrl(content.redes.linkedin);
   const actions = [];
   if (email) {
-    const mail = link('Enviar e-mail', `mailto:${email}`);
+    const mail = link(t().sendEmail, `mailto:${email}`);
     mail.className = 'button primary';
-    const copy = element('button', 'button secondary', 'Copiar e-mail');
+    const copy = element('button', 'button secondary', t().copyEmail);
     copy.type = 'button';
     copy.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(email);
-        contactStatus.textContent = 'E-mail copiado.';
+        contactStatus.textContent = t().emailCopied;
       } catch {
         contactStatus.textContent = email;
       }

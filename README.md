@@ -30,6 +30,14 @@ Abra `http://127.0.0.1:8000/` no navegador. Use `Ctrl+C` no terminal para encerr
 
 ![Comparação entre o tema escuro e o claro](docs/temas.png)
 
+## Português e inglês
+
+O botão **PT/EN** no cabeçalho troca o idioma do site. A escolha fica salva no navegador; na primeira visita, o site segue o idioma do navegador. Para mandar o link já em inglês, use `https://wesleypie.tech/?lang=en`.
+
+Os textos fixos (menus, botões, selos de status, tipos de tecnologia) ficam em `textos.js`. O conteúdo é escrito em português e cada item guarda a própria tradução no campo `en`. Quando um texto não tem versão em inglês, o site em inglês mostra o português no lugar, então nada fica em branco.
+
+No painel, a chave **Editando: Português / English** no topo troca os campos. Em **English** aparecem só os textos traduzíveis (apresentação, bio, título, resumo e descrição dos projetos, descrição das imagens, área e “Como uso” das tecnologias, nome dos certificados), cada um com o original embaixo e um aviso quando falta tradução; o botão mostra quantos faltam. Links, imagens, status e ordem são os mesmos nas duas línguas e ficam na aba Português. A Calisto também traduz pelo MCP, com `get_translations` e `set_translations`.
+
 ## Administração
 
 Abra **Administração** no rodapé. Após a configuração inicial, entre com seu e-mail e senha para editar a apresentação, a bio, os perfis, o currículo, os projetos, as tecnologias e os certificados. **Publicar alterações** salva o conteúdo compartilhado no Firestore e o torna visível para visitantes. O site começa com os exemplos de `conteudo.js`.

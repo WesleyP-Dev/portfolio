@@ -116,6 +116,89 @@ function withUpload(wrapper, maxSide, { keepAnimated = false } = {}) {
   return wrapper;
 }
 
+// ——— Tradução para o inglês ———
+// Cada texto traduzível ganha um campo "English" logo depois do campo em português. A chave no topo do
+// painel mostra um ou outro conjunto; links, imagens, status e ordem são os mesmos nas duas línguas.
+const missingCount = document.querySelector('#missing-count');
+const editOptions = [...document.querySelectorAll('[data-edit-option]')];
+let editLang = 'pt';
+
+function setEditLang(next) {
+  editLang = next;
+  editor.dataset.editLang = next;
+  for (const option of editOptions) option.setAttribute('aria-pressed', String(option.dataset.editOption === next));
+  if (next === 'en') {
+    for (const details of editor.querySelectorAll('details.editor-entry')) {
+      if (details.querySelector('.lang-en.is-missing')) details.open = true;
+    }
+  }
+}
+for (const option of editOptions) option.addEventListener('click', () => setEditLang(option.dataset.editOption));
+
+let countFrame = 0;
+function updateMissingCount() {
+  cancelAnimationFrame(countFrame);
+  countFrame = requestAnimationFrame(() => {
+    const missing = editor.querySelectorAll('.lang-en.is-missing').length;
+    missingCount.textContent = missing ? `· ${missing} sem tradução` : '· completo';
+    missingCount.classList.toggle('is-complete', !missing);
+  });
+}
+new MutationObserver(updateMissingCount).observe(editor, { childList: true, subtree: true });
+
+function translation(ptWrapper, path, value, limit) {
+  const ptInput = ptWrapper.querySelector('input, textarea');
+  const label = ptWrapper.firstChild.textContent.replace(/\s*\(opcional\)/i, '').trim();
+  const rows = ptInput.tagName === 'TEXTAREA' ? ptInput.rows : 0;
+  const wrapper = field(`en.${path}`, `${label} (English)`, value ?? '', { rows, limit, full: ptWrapper.classList.contains('full-field') });
+  wrapper.classList.add('lang-en');
+  wrapper.lang = 'en';
+  const enInput = wrapper.querySelector('input, textarea');
+  const original = node('span', 'translation-source');
+  original.lang = 'pt-BR';
+  const warning = node('span', 'translation-missing', 'Sem tradução: o site mostra o texto em português.');
+  wrapper.append(original, warning);
+  function refresh() {
+    const source = ptInput.value.trim();
+    original.textContent = `PT: ${source || '(vazio)'}`;
+    const missing = Boolean(source) && !enInput.value.trim();
+    warning.hidden = !missing;
+    wrapper.classList.toggle('is-missing', missing);
+    updateMissingCount();
+  }
+  ptInput.addEventListener('input', refresh);
+  enInput.addEventListener('input', refresh);
+  wrapper.refresh = refresh;
+  ptWrapper.after(wrapper);
+  refresh();
+  return wrapper;
+}
+
+function translate(scope, specs, values = {}) {
+  for (const [name, path, limit] of specs) {
+    const ptInput = scope.querySelector(`[name="${name}"]`);
+    const value = path.split('.').reduce((item, key) => item?.[key], values);
+    const existing = scope.querySelector(`[name="en.${path}"]`);
+    if (existing) {
+      existing.value = value ?? '';
+      existing.parentElement.refresh();
+    } else translation(ptInput.parentElement, path, value, limit);
+  }
+}
+
+function english(scope, paths) {
+  const result = {};
+  for (const path of paths) {
+    const value = scope.querySelector(`[name="en.${path}"]`)?.value.trim();
+    if (!value) continue;
+    const keys = path.split('.');
+    let target = result;
+    for (const key of keys.slice(0, -1)) target = (target[key] ??= {});
+    target[keys.at(-1)] = value;
+  }
+  return Object.keys(result).length ? result : null;
+}
+
 function entry(title, emptyTitle) {
   const root = node('details', 'editor-entry');
   const summary = node('summary', '', title || emptyTitle);
@@ -225,6 +308,7 @@ function projectEntry(project = {}, open = false) {
     field('demo', 'Link da demonstração', project.demo, { type: 'url', limit: 500 }),
   );
   bindTitle(fields.querySelector('input'));
+  translate(fields, [['titulo', 'titulo', 120], ['resumo', 'resumo', 320], ['descricao', 'descricao', 6000]], project.en);
 
   const gallery = node('fieldset', 'gallery-fields');
   const images = node('div', 'gallery-rows');
@@ -244,6 +328,7 @@ function projectEntry(project = {}, open = false) {
       field('alt', 'Descrição da imagem para acessibilidade', image.alt, { required: true, limit: 320 }),
       button('Remover imagem', () => { row.remove(); addImage.focus(); }),
     );
+    translate(row, [['alt', 'alt', 320]], image.en);
     return row;
   }
   images.append(...(project.imagens ?? []).map(imageEntry));
@@ -288,6 +373,7 @@ function skillEntry(skill = {}, open = false) {
   for (const input of [iconInput, nameInput, imageInput, keepColors]) input.addEventListener('change', updatePreview);
   updatePreview();
   bindTitle(nameInput);
+  translate(fields, [['categoria', 'categoria', 100], ['experiencia', 'experiencia', 700]], skill.en);
   actions.append(button('Remover tecnologia', () => removeEntry(root, skillAdd)));
   return root;
 }
@@ -303,6 +389,7 @@ function certificateEntry(certificate = {}, open = false) {
     withUpload(field('imagem', 'Imagem do certificado (endereço ou do PC)', certificate.imagem, { full: true, limit: 500, placeholder: 'https://…' }), 1600),
   );
   bindTitle(fields.querySelector('input'));
+  translate(fields, [['titulo', 'titulo', 180]], certificate.en);
   actions.append(button('Remover certificado', () => removeEntry(root, certificateAdd)));
   return root;
 }
@@ -335,6 +422,8 @@ function fieldValue(scope, name, urlValidator) {
 }
 
 editor.addEventListener('invalid', (event) => {
+  // Campo obrigatório em português vazio: volta para a aba Português para mostrar onde está.
+  if (editLang === 'en' && !event.target.closest('.lang-en')) setEditLang('pt');
   const details = event.target.closest('details');
   if (details) details.open = true;
 }, true);
@@ -346,15 +435,18 @@ function collectContent() {
   const projects = [...projectEditor.children].map((item) => {
     const get = (name, validator) => fieldValue(item, name, validator);
     const visibility = get('visibilidade');
+    const en = english(item, ['titulo', 'resumo', 'descricao']);
     return {
       titulo: get('titulo'), categoria: get('categoria'), resumo: get('resumo'), descricao: get('descricao'),
       status: get('status'),
       tecnologias: get('tecnologias').split(',').map((text) => text.trim()).filter(Boolean),
       visibilidade: visibility, repositorio: visibility === 'privado' ? '' : get('repositorio', githubUrl), demo: get('demo', webUrl),
       demonstracao: item.querySelector('[name="demonstracao"]').checked,
-      imagens: [...item.querySelectorAll('.image-row')].map((row) => ({
-        src: fieldValue(row, 'src', imageUrl), alt: fieldValue(row, 'alt'),
-      })),
+      imagens: [...item.querySelectorAll('.image-row')].map((row) => {
+        const imageEn = english(row, ['alt']);
+        return { src: fieldValue(row, 'src', imageUrl), alt: fieldValue(row, 'alt'), ...(imageEn ? { en: imageEn } : {}) };
+      }),
+      ...(en ? { en } : {}),
     };
   });
   const skills = [...skillEditor.children].map((item) => ({
@@ -362,11 +454,13 @@ function collectContent() {
     experiencia: fieldValue(item, 'experiencia'), icone: fieldValue(item, 'icone'),
     imagem: fieldValue(item, 'imagem', imageUrl),
     ...(item.querySelector('[name="imagemOriginal"]').checked ? { imagemOriginal: true } : {}),
+    ...withEnglish(item, ['categoria', 'experiencia']),
   }));
   const certificates = [...certificateEditor.children].map((item) => ({
     titulo: fieldValue(item, 'titulo'), instituicao: fieldValue(item, 'instituicao'),
     data: fieldValue(item, 'data'), credencial: fieldValue(item, 'credencial', webUrl),
     imagem: fieldValue(item, 'imagem', imageUrl),
+    ...withEnglish(item, ['titulo']),
   }));
   return {
     nome: value('nome'), introducao: value('introducao'), curriculo: value('curriculo', webUrl),
@@ -374,7 +468,13 @@ function collectContent() {
     redes: { linkedin: value('linkedin', webUrl), github: value('github', webUrl), email: value('email', emailAddress) },
     tecnologias: skills, projetos: projects,
     ...(certificates.length ? { certificados: certificates } : {}),
+    ...withEnglish(profile, ['introducao', 'sobre.titulo', 'sobre.descricao']),
   };
+}
+
+function withEnglish(scope, paths) {
+  const en = english(scope, paths);
+  return en ? { en } : {};
 }
 
 function renderEditor(content) {
@@ -385,6 +485,7 @@ function renderEditor(content) {
     email: content.redes.email ?? '', curriculo: content.curriculo ?? '',
   };
   for (const [name, value] of Object.entries(values)) profile.querySelector(`[name="${name}"]`).value = value;
+  translate(profile, [['introducao', 'introducao', 300], ['titulo', 'sobre.titulo', 220], ['descricao', 'sobre.descricao', 6000]], content.en);
   projectEditor.replaceChildren(...content.projetos.map((project) => projectEntry(project)));
   skillEditor.replaceChildren(...content.tecnologias.map((skill) => skillEntry(skill)));
   certificateEditor.replaceChildren(...(content.certificados ?? []).map((certificate) => certificateEntry(certificate)));

@@ -9,12 +9,12 @@ const maxBytes = 750_000;
 
 export async function loadSite() {
   const context = vm.createContext({ URL });
-  for (const file of ['links.js', 'catalogo.js', 'conteudo.js']) {
+  for (const file of ['links.js', 'catalogo.js', 'textos.js', 'conteudo.js']) {
     const source = await readFile(new URL(`../${file}`, import.meta.url), 'utf8');
     vm.runInContext(source, context, { filename: file });
   }
   const site = vm.runInContext(
-    '({ webUrl, githubUrl, imageUrl, emailAddress, skillTypes, projectStages, projectVisibility, builtInIcons, iconAliases, iconSlug, iconMaskUrl, skillType, portfolio })',
+    '({ webUrl, githubUrl, imageUrl, emailAddress, skillTypes, projectStages, projectVisibility, builtInIcons, iconAliases, iconSlug, iconMaskUrl, skillType, portfolio, translatableFields })',
     context,
   );
   return {
@@ -82,8 +82,33 @@ function isoDate(value, label) {
   return result;
 }
 
+// Versão em inglês de um item ("en"): só os textos traduzíveis, sem campos vazios. Some quando nada foi traduzido.
+export function normalizeEnglish(site, value, kind, label) {
+  if (value === undefined || value === null) return undefined;
+  const fields = site.translatableFields[kind];
+  const groups = {};
+  for (const path of Object.keys(fields)) {
+    const [head, tail] = path.split('.');
+    if (tail) (groups[head] ??= []).push(tail);
+  }
+  onlyKeys(value, [...new Set(Object.keys(fields).map((path) => path.split('.')[0]))], `${label} (inglês)`);
+  for (const [group, keys] of Object.entries(groups)) onlyKeys(value[group], keys, `${label} (inglês): ${group}`);
+  const result = {};
+  for (const [path, limit] of Object.entries(fields)) {
+    const keys = path.split('.');
+    const translated = text(keys.reduce((item, key) => item?.[key], value), `${label} (inglês): ${path}`, { limit });
+    if (!translated) continue;
+    let target = result;
+    for (const key of keys.slice(0, -1)) target = (target[key] ??= {});
+    target[keys.at(-1)] = translated;
+  }
+  return Object.keys(result).length ? result : undefined;
+}
+
+const withEnglish = (en) => (en ? { en } : {});
+
 export function normalizeProject(site, project, where = 'Projeto') {
-  onlyKeys(project, ['titulo', 'categoria', 'status', 'resumo', 'descricao', 'tecnologias', 'visibilidade', 'repositorio', 'demo', 'demonstracao', 'imagens'], where);
+  onlyKeys(project, ['titulo', 'categoria', 'status', 'resumo', 'descricao', 'tecnologias', 'visibilidade', 'repositorio', 'demo', 'demonstracao', 'imagens', 'en'], where);
   const titulo = text(project.titulo, `${where}: título`, { required: true, limit: 120 });
   const label = (name) => `${titulo}: ${name}`;
   const visibilidade = choice(project.visibilidade, label('visibilidade'), ['', ...site.visibilities]);
@@ -93,7 +118,7 @@ export function normalizeProject(site, project, where = 'Projeto') {
     .filter(Boolean);
   if (tecnologias.join(', ').length > 500) throw new Error(`“${label('tecnologias')}” passa de 500 caracteres.`);
   const imagens = list(project.imagens, label('imagens'), maxImages).map((image, index) => {
-    onlyKeys(image, ['src', 'alt'], label(`imagem ${index + 1}`));
+    onlyKeys(image, ['src', 'alt', 'en'], label(`imagem ${index + 1}`));
     return {
       src: (() => {
         const src = address(image.src, label(`imagem ${index + 1}`), site.imageUrl);
@@ -101,6 +126,7 @@ export function normalizeProject(site, project, where = 'Projeto') {
         return src;
       })(),
       alt: text(image.alt, label(`descrição da imagem ${index + 1}`), { required: true, limit: 320 }),
+      ...withEnglish(normalizeEnglish(site, image.en, 'imagem', label(`imagem ${index + 1}`))),
     };
   });
   return {
@@ -115,11 +141,12 @@ export function normalizeProject(site, project, where = 'Projeto') {
     demo: address(project.demo, label('demonstração'), site.webUrl),
     demonstracao: flag(project.demonstracao, label('demonstração de exemplo')),
     imagens,
+    ...withEnglish(normalizeEnglish(site, project.en, 'projeto', titulo)),
   };
 }
 
 export function normalizeSkill(site, skill, where = 'Tecnologia') {
-  onlyKeys(skill, ['nome', 'tipo', 'categoria', 'experiencia', 'icone', 'imagem', 'imagemOriginal'], where);
+  onlyKeys(skill, ['nome', 'tipo', 'categoria', 'experiencia', 'icone', 'imagem', 'imagemOriginal', 'en'], where);
   const nome = text(skill.nome, `${where}: nome`, { required: true, limit: 120 });
   const label = (name) => `${nome}: ${name}`;
   const tipo = skill.tipo ? choice(skill.tipo, label('tipo'), site.skillKinds) : site.skillType(skill);
@@ -131,11 +158,12 @@ export function normalizeSkill(site, skill, where = 'Tecnologia') {
     icone: text(skill.icone, label('ícone'), { limit: 60 }),
     imagem: address(skill.imagem, label('ícone personalizado'), site.imageUrl),
     ...(flag(skill.imagemOriginal, label('manter cores originais')) ? { imagemOriginal: true } : {}),
+    ...withEnglish(normalizeEnglish(site, skill.en, 'tecnologia', nome)),
   };
 }
 
 export function normalizeCertificate(site, certificate, where = 'Certificado') {
-  onlyKeys(certificate, ['titulo', 'instituicao', 'data', 'credencial', 'imagem'], where);
+  onlyKeys(certificate, ['titulo', 'instituicao', 'data', 'credencial', 'imagem', 'en'], where);
   const titulo = text(certificate.titulo, `${where}: nome`, { required: true, limit: 180 });
   const label = (name) => `${titulo}: ${name}`;
   return {
@@ -144,11 +172,12 @@ export function normalizeCertificate(site, certificate, where = 'Certificado') {
     data: isoDate(certificate.data, label('data de emissão')),
     credencial: address(certificate.credencial, label('link da credencial'), site.webUrl),
     imagem: address(certificate.imagem, label('imagem do certificado'), site.imageUrl),
+    ...withEnglish(normalizeEnglish(site, certificate.en, 'certificado', titulo)),
   };
 }
 
 export function normalizeContent(site, content) {
-  onlyKeys(content, ['nome', 'introducao', 'sobre', 'redes', 'curriculo', 'tecnologias', 'projetos', 'certificados'], 'conteúdo');
+  onlyKeys(content, ['nome', 'introducao', 'sobre', 'redes', 'curriculo', 'tecnologias', 'projetos', 'certificados', 'en'], 'conteúdo');
   const sobre = content.sobre ?? {};
   const redes = content.redes ?? {};
   onlyKeys(sobre, ['titulo', 'descricao'], 'sobre');
@@ -165,6 +194,7 @@ export function normalizeContent(site, content) {
     tecnologias: list(content.tecnologias, 'tecnologias', maxItems).map((item, index) => normalizeSkill(site, item, `Tecnologia ${index + 1}`)),
     projetos: list(content.projetos, 'projetos', maxItems).map((item, index) => normalizeProject(site, item, `Projeto ${index + 1}`)),
     ...(certificados.length ? { certificados } : {}),
+    ...withEnglish(normalizeEnglish(site, content.en, 'perfil', 'Perfil')),
   };
   const size = new TextEncoder().encode(JSON.stringify(result)).length;
   if (size > maxBytes) throw new Error(`O conteúdo ficaria com ${size} bytes; o limite é ${maxBytes}. Reduza descrições ou imagens.`);
@@ -205,7 +235,7 @@ export function moveTo(items, index, position, label) {
 
 // Diferença legível entre duas versões do conteúdo.
 const listIds = { projetos: (item) => item.titulo, tecnologias: (item) => item.nome, certificados: (item) => item.titulo };
-const profilePaths = ['nome', 'introducao', 'curriculo', 'sobre.titulo', 'sobre.descricao', 'redes.linkedin', 'redes.github', 'redes.email'];
+const profilePaths = ['nome', 'introducao', 'curriculo', 'sobre.titulo', 'sobre.descricao', 'redes.linkedin', 'redes.github', 'redes.email', 'en.introducao', 'en.sobre.titulo', 'en.sobre.descricao'];
 
 function at(object, path) {
   return path.split('.').reduce((value, key) => value?.[key], object);

@@ -39,9 +39,13 @@ Toda ferramenta que altera o conteúdo aceita `dry_run: true`, que devolve o dif
 | `remove_skill` | Remove uma tecnologia pelo nome. |
 | `upsert_certificate` | Cria ou atualiza um certificado (`titulo`, `instituicao`, `data` AAAA-MM-DD, `credencial`, `imagem`). |
 | `remove_certificate` | Remove um certificado pelo nome ou pelo link da credencial. |
+| `get_translations` | Lista os textos com o original em português (`pt`) e a versão em inglês (`en`). Por padrão mostra só o que falta traduzir; `faltando: false` mostra tudo. |
+| `set_translations` | Grava várias traduções numa só publicação: `perfil`, `projetos` (pelo título ou repositório, com `imagens` na ordem da galeria), `tecnologias` e `certificados`. Texto vazio apaga a tradução e o site volta a mostrar o português. |
 | `import_github_repos` | Busca os repositórios públicos (sem forks) de `usuario`, ou do perfil em `redes.github`, e adiciona como projetos com os textos do GitHub, como **Importar do GitHub** no painel. `repositorios` escolhe quais. Repositórios já cadastrados são ignorados. |
 
 As validações são as do painel e das regras: até 80 itens por lista, 16 imagens por projeto, os mesmos limites de caracteres, repositório só em `https://github.com/usuario/repositorio`, links só `http`/`https` sem usuário e senha, imagens por endereço público ou `./assets/…`, e no máximo 750 KB de conteúdo. Campos desconhecidos são recusados para evitar erros de digitação. Com **Privado**, o link do repositório é omitido, como no painel.
+
+As traduções ficam no campo `en` de cada item e são mantidas quando o item é editado em português pelas outras ferramentas.
 
 Se o portfólio ainda não tiver sido publicado, a primeira alteração parte dos exemplos de `conteudo.js`, marcados como demonstração. Remova-os com `remove_project` quando quiser.
 
@@ -117,7 +121,7 @@ Com os emuladores do README principal ativos em um terminal (`node preview-admin
 node mcp/teste-local.mjs
 ```
 
-O teste limpa o Firestore do emulador, inicia o servidor e percorre todas as ferramentas com a conta fictícia `teste@example.test`: criação e edição de projetos (Calisto, EyeBridge, printVal-3d), perfil com e-mail, tecnologias com ícone automático, certificados, ordem, remoção, `dry_run`, `revisao_esperada`, validações recusadas, importação do GitHub, senha errada, conta que não é dona, regra do Firestore recusando revisão pulada e escrita concorrente. Também confere que a senha e o token não aparecem na saída. Use `--sem-github` para pular as consultas ao GitHub e ao Simple Icons sem internet. Depois do teste, `http://127.0.0.1:4175/` mostra o conteúdo publicado pelo servidor.
+O teste limpa o Firestore do emulador, inicia o servidor e percorre todas as ferramentas com a conta fictícia `teste@example.test`: criação e edição de projetos (Calisto, EyeBridge, printVal-3d), perfil com e-mail, tecnologias com ícone automático, certificados, ordem, remoção, traduções para o inglês, `dry_run`, `revisao_esperada`, validações recusadas, importação do GitHub, senha errada, conta que não é dona, regra do Firestore recusando revisão pulada e escrita concorrente. Também confere que a senha e o token não aparecem na saída. Use `--sem-github` para pular as consultas ao GitHub e ao Simple Icons sem internet. Depois do teste, `http://127.0.0.1:4175/` mostra o conteúdo publicado pelo servidor.
 
 Para usar o servidor à mão contra os emuladores, defina as variáveis do teste:
 

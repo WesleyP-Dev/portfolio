@@ -109,6 +109,52 @@ async function iconStatus(skill) {
   };
 }
 
+// ——— Tradução para o inglês ———
+// Lista cada texto traduzível com o original em português e a versão em inglês atual.
+function translationReport(content, onlyMissing) {
+  const pair = (item, path) => {
+    const read = (object) => path.split('.').reduce((value, key) => value?.[key], object) ?? '';
+    return { pt: read(item), en: read(item?.en) };
+  };
+  const needs = ({ pt, en }) => Boolean(pt) && !en;
+  const fieldsOf = (item, kind) => Object.fromEntries(Object.keys(site.translatableFields[kind])
+    .map((path) => [path, pair(item, path)])
+    .filter(([, value]) => value.pt && (!onlyMissing || needs(value))));
+  let missing = 0;
+  const count = (fields) => { missing += Object.values(fields).filter(needs).length; return fields; };
+  const perfil = count(fieldsOf(content, 'perfil'));
+  const projetos = content.projetos.map((project) => {
+    const campos = count(fieldsOf(project, 'projeto'));
+    const imagens = (project.imagens ?? []).map((image, index) => ({ imagem: index + 1, ...pair(image, 'alt') }))
+      .filter((image) => image.pt && (!onlyMissing || needs(image)));
+    missing += imagens.filter(needs).length;
+    return { projeto: project.titulo, campos, ...(imagens.length ? { imagens } : {}) };
+  }).filter((project) => Object.keys(project.campos).length || project.imagens);
+  const tecnologias = content.tecnologias.map((skill) => ({ tecnologia: skill.nome, campos: count(fieldsOf(skill, 'tecnologia')) }))
+    .filter((skill) => Object.keys(skill.campos).length);
+  const certificados = (content.certificados ?? []).map((certificate) => ({ certificado: certificate.titulo, campos: count(fieldsOf(certificate, 'certificado')) }))
+    .filter((certificate) => Object.keys(certificate.campos).length);
+  return { faltando: missing, perfil, projetos, tecnologias, certificados };
+}
+
+function mergeEnglish(item, values, kind, label) {
+  const allowed = Object.keys(site.translatableFields[kind]);
+  onlyKeys(values, allowed.filter((path) => !path.includes('.')).concat(kind === 'perfil' ? ['sobre'] : []), label);
+  const en = clone(item.en ?? {});
+  for (const path of allowed) {
+    const keys = path.split('.');
+    const value = keys.reduce((object, key) => object?.[key], values);
+    if (value === undefined) continue;
+    if (typeof value !== 'string') throw new Error(`“${label}: ${path}” precisa ser texto.`);
+    let target = en;
+    for (const key of keys.slice(0, -1)) target = (target[key] ??= {});
+    target[keys.at(-1)] = value;
+  }
+  item.en = en;
+}
+
+const englishText = (limit, description) => ({ type: 'string', maxLength: limit, description });
+
 // ——— Ferramentas ———
 const tools = [
   {
@@ -309,6 +355,88 @@ const tools = [
     }),
   },
   {
+    name: 'get_translations',
+    title: 'Ver traduções para o inglês',
+    description: 'Lista os textos do portfólio com o original em português (pt) e a versão em inglês (en). O site em inglês mostra o português onde "en" estiver vazio. Use faltando: true para ver só o que ainda não foi traduzido e depois preencha com set_translations.',
+    inputSchema: schema({ faltando: { type: 'boolean', description: 'Se verdadeiro, mostra só os textos sem tradução (padrão: verdadeiro).' } }),
+    annotations: { readOnlyHint: true, openWorldHint: true },
+    async run(args) {
+      onlyKeys(args, ['faltando'], 'get_translations');
+      const current = await (await getStore()).read();
+      const content = current.content ?? site.defaults();
+      return { revisao: current.revision, ...translationReport(content, args.faltando !== false) };
+    },
+  },
+  {
+    name: 'set_translations',
+    title: 'Gravar traduções para o inglês',
+    description: 'Grava a versão em inglês de vários textos numa só publicação. Envie só os campos traduzidos; texto vazio apaga a tradução (o site volta a mostrar o português). Traduza com naturalidade para um recrutador ou visitante de fora, mantendo nomes próprios, nomes de tecnologias e termos técnicos. Confira antes com dry_run.',
+    inputSchema: schema({
+      perfil: schema({
+        introducao: englishText(300, 'Apresentação no topo do site.'),
+        sobre: schema({ titulo: englishText(220, 'Título da bio.'), descricao: englishText(6000, 'Texto "Sobre mim".') }),
+      }),
+      projetos: {
+        type: 'array',
+        items: schema({
+          projeto: { type: 'string', description: 'Título atual (em português) ou URL do repositório.' },
+          titulo: englishText(120), resumo: englishText(320), descricao: englishText(6000),
+          imagens: { type: 'array', items: { type: 'string', maxLength: 320 }, description: 'Descrições das imagens em inglês, na ordem da galeria; "" mantém a atual.' },
+        }, ['projeto']),
+      },
+      tecnologias: {
+        type: 'array',
+        items: schema({ tecnologia: { type: 'string', description: 'Nome da tecnologia.' }, categoria: englishText(100, 'Área ou especialidade.'), experiencia: englishText(700, 'Como usa (texto "Como uso").') }, ['tecnologia']),
+      },
+      certificados: {
+        type: 'array',
+        items: schema({ certificado: { type: 'string', description: 'Nome atual ou link da credencial.' }, titulo: englishText(180, 'Nome do certificado em inglês.') }, ['certificado']),
+      },
+      ...commonWrite,
+    }),
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    async run(args) {
+      const result = await change(args, (content) => {
+        onlyKeys(args, ['perfil', 'projetos', 'tecnologias', 'certificados', 'dry_run', 'revisao_esperada'], 'set_translations');
+        const touched = [];
+        if (args.perfil !== undefined) {
+          onlyKeys(args.perfil.sobre, ['titulo', 'descricao'], 'perfil.sobre');
+          mergeEnglish(content, args.perfil, 'perfil', 'perfil');
+          touched.push('perfil');
+        }
+        for (const entry of args.projetos ?? []) {
+          onlyKeys(entry, ['projeto', 'titulo', 'resumo', 'descricao', 'imagens'], 'set_translations: projeto');
+          const project = content.projetos[locate(content.projetos, entry.projeto, { titleKey: 'titulo', urlKey: 'repositorio', label: 'projeto' })];
+          const { projeto, imagens, ...fields } = entry;
+          mergeEnglish(project, fields, 'projeto', project.titulo);
+          if (imagens !== undefined) {
+            if (!Array.isArray(imagens)) throw new Error(`“${project.titulo}: imagens” precisa ser uma lista.`);
+            if (imagens.length > (project.imagens ?? []).length) throw new Error(`“${project.titulo}” tem ${(project.imagens ?? []).length} imagens, mas vieram ${imagens.length} descrições.`);
+            imagens.forEach((alt, index) => { if (alt !== '' && alt !== null) mergeEnglish(project.imagens[index], { alt }, 'imagem', `${project.titulo}: imagem ${index + 1}`); });
+          }
+          touched.push(project.titulo);
+        }
+        for (const entry of args.tecnologias ?? []) {
+          onlyKeys(entry, ['tecnologia', 'categoria', 'experiencia'], 'set_translations: tecnologia');
+          const skill = content.tecnologias[locate(content.tecnologias, entry.tecnologia, { titleKey: 'nome', label: 'tecnologia' })];
+          const { tecnologia, ...fields } = entry;
+          mergeEnglish(skill, fields, 'tecnologia', skill.nome);
+          touched.push(skill.nome);
+        }
+        content.certificados ??= [];
+        for (const entry of args.certificados ?? []) {
+          onlyKeys(entry, ['certificado', 'titulo'], 'set_translations: certificado');
+          const certificate = content.certificados[locate(content.certificados, entry.certificado, { titleKey: 'titulo', urlKey: 'credencial', label: 'certificado' })];
+          mergeEnglish(certificate, { titulo: entry.titulo }, 'certificado', certificate.titulo);
+          touched.push(certificate.titulo);
+        }
+        if (!touched.length) throw new Error('Envie ao menos um texto em perfil, projetos, tecnologias ou certificados.');
+        return { itens: touched };
+      });
+      return result;
+    },
+  },
+  {
     name: 'import_github_repos',
     title: 'Importar repositórios do GitHub',
     description: 'Busca os repositórios públicos (sem forks) de um usuário do GitHub e adiciona como projetos com os textos do GitHub, como a importação do painel. Repositórios já cadastrados são ignorados. Use dry_run para ver a lista antes e revise os textos depois com upsert_project.',
@@ -383,7 +511,7 @@ async function handle(message) {
         protocolVersion: protocolVersions.includes(requested) ? requested : protocolVersions[0],
         capabilities: { tools: { listChanged: false } },
         serverInfo,
-        instructions: 'Ferramentas para manter o portfólio do Wesley. Leia com get_portfolio antes de alterar, use dry_run para conferir o diff e só depois publique. Cada publicação incrementa a revisão em 1.',
+        instructions: 'Ferramentas para manter o portfólio do Wesley. Leia com get_portfolio antes de alterar, use dry_run para conferir o diff e só depois publique. Cada publicação incrementa a revisão em 1. O site tem versão em inglês: o conteúdo é escrito em português e a tradução fica no campo "en" de cada item; use get_translations para ver o que falta e set_translations para traduzir.',
       };
     }
     case 'ping':

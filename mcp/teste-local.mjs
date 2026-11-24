@@ -74,7 +74,7 @@ await step('initialize e tools/list', async () => {
   server.child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })}\n`);
   const { result } = await rpc('tools/list', {});
   const names = result.tools.map((tool) => tool.name);
-  for (const name of ['get_portfolio', 'update_profile', 'upsert_project', 'remove_project', 'reorder_projects', 'upsert_skill', 'remove_skill', 'upsert_certificate', 'import_github_repos']) {
+  for (const name of ['get_portfolio', 'update_profile', 'upsert_project', 'remove_project', 'reorder_projects', 'upsert_skill', 'remove_skill', 'upsert_certificate', 'import_github_repos', 'get_translations', 'set_translations']) {
     assert.ok(names.includes(name), name);
   }
   const unknown = await rpc('metodo/inexistente', {});
@@ -216,6 +216,38 @@ await step('reorder_projects e remove_project', async () => {
     if (!result.erro) assert.equal(result.removido, title);
   }
   revision = (await readDocument()).revision;
+});
+
+await step('get_translations e set_translations (versão em inglês)', async () => {
+  let result = await call('get_translations', {});
+  assert.ok(result.faltando > 0);
+  assert.ok(result.projetos.some((project) => project.projeto === 'Calisto' && project.campos.resumo?.en === ''));
+  result = await call('set_translations', {
+    perfil: { sobre: { titulo: 'This is where I share what I build and learn.' } },
+    projetos: [{ projeto: 'Calisto', resumo: 'Personal AI assistant running on a Raspberry Pi.' }],
+    tecnologias: [{ tecnologia: 'Python', experiencia: 'Automation and scripts.' }],
+    dry_run: true,
+  });
+  assert.equal(result.dry_run, true);
+  assert.equal((await readDocument()).revision, revision);
+  result = await call('set_translations', {
+    perfil: { sobre: { titulo: 'This is where I share what I build and learn.' } },
+    projetos: [{ projeto: 'Calisto', resumo: 'Personal AI assistant running on a Raspberry Pi.' }],
+  });
+  assert.equal(result.revisao, revision + 1);
+  revision = result.revisao;
+  const content = (await call('get_portfolio')).conteudo;
+  assert.equal(content.en.sobre.titulo, 'This is where I share what I build and learn.');
+  assert.equal(content.projetos.find((project) => project.titulo === 'Calisto').en.resumo, 'Personal AI assistant running on a Raspberry Pi.');
+  // Editar o projeto em português mantém a tradução; texto vazio apaga.
+  result = await call('upsert_project', { projeto: 'Calisto', descricao: 'Descrição nova.' });
+  revision = result.revisao;
+  assert.equal((await call('get_portfolio')).conteudo.projetos.find((project) => project.titulo === 'Calisto').en.resumo, 'Personal AI assistant running on a Raspberry Pi.');
+  result = await call('set_translations', { projetos: [{ projeto: 'Calisto', resumo: '' }] });
+  revision = result.revisao;
+  assert.equal((await call('get_portfolio')).conteudo.projetos.find((project) => project.titulo === 'Calisto').en, undefined);
+  result = await call('set_translations', { projetos: [{ projeto: 'Calisto', inventado: 'x' }] });
+  assert.match(result.erro, /desconhecido/);
 });
 
 if (online) {

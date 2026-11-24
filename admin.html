@@ -48,7 +48,15 @@
       <button class="button primary" type="submit" id="login-button" disabled>Entrar</button>
     </form>
 
-    <form id="editor" hidden>
+    <form id="editor" data-edit-lang="pt" hidden>
+      <div class="admin-panel edit-language">
+        <div class="edit-language-switch" role="group" aria-label="Idioma em edição">
+          <span>Editando:</span>
+          <button type="button" data-edit-option="pt" aria-pressed="true">Português</button>
+          <button type="button" data-edit-option="en" aria-pressed="false">English <span id="missing-count" class="missing-count"></span></button>
+        </div>
+        <p class="field-hint" id="edit-language-hint">Edite em português normalmente. A aba English mostra só os textos, com o original embaixo de cada campo; o que ficar vazio aparece em português no site.</p>
+      </div>
       <fieldset id="editor-fields" class="editor-fields">
         <section class="admin-panel" aria-labelledby="profile-heading">
           <h2 id="profile-heading">Perfil e links</h2>
@@ -79,7 +87,7 @@
           <div class="editor-heading"><h2 id="certificates-heading">Certificados</h2><button class="button secondary" type="button" id="add-certificate">Adicionar certificado</button></div>
           <div class="entry-list" id="certificate-editor"></div>
         </section>
-        <section class="admin-panel" aria-labelledby="backup-heading">
+        <section class="admin-panel pt-only" aria-labelledby="backup-heading">
           <h2 id="backup-heading">Cópia de segurança</h2>
           <p class="field-hint">Baixe todo o conteúdo em JSON ou carregue uma cópia no editor. Carregar não publica nada sozinho.</p>
           <div class="admin-actions backup-actions">

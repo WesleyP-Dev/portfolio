@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url';
 
 const root = new URL('./', import.meta.url);
 const files = [
-  'index.html', 'admin.html', 'styles.css', 'admin.css', 'conteudo.js', 'script.js', 'links.js',
+  'index.html', 'admin.html', 'styles.css', 'admin.css', 'textos.js', 'conteudo.js', 'script.js', 'links.js',
   'admin.js', 'firebase-config.js', 'cloud.mjs', 'catalogo.js', 'assets',
 ];
 

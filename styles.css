@@ -124,6 +124,11 @@ p, h1, h2, h3 { margin: 0; }
 .palettes button:hover { background: var(--raised); }
 .palettes button[aria-pressed='true'] { border-color: var(--accent); background: var(--accent-soft); }
 .palettes button:focus-visible { outline-offset: 1px; }
+.languages { display: flex; gap: .15rem; padding: .15rem; border: 1px solid var(--control-line); border-radius: 2rem; }
+.languages button { min-width: 2.125rem; height: 2.125rem; padding: 0 .45rem; border: 2px solid transparent; border-radius: 2rem; background: transparent; color: var(--muted); font: 700 .75rem/1 var(--mono); letter-spacing: .04em; transition: background-color .25s ease, color .25s ease, border-color .25s ease; }
+.languages button:hover { background: var(--raised); color: var(--text); }
+.languages button[aria-pressed='true'] { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+.languages button:focus-visible { outline-offset: 1px; }
 .theme-icon { display: block; width: 1.4rem; height: 1.4rem; position: relative; transition: transform .4s ease; }
 .theme-icon::before { content: '☀'; position: absolute; inset: 0; font: 1.4rem/1 'Segoe UI Symbol', sans-serif; }
 [data-theme='light'] .theme-icon { transform: rotate(-20deg); }
@@ -387,6 +392,11 @@ body { position: relative; isolation: isolate; }
   .header-layout { grid-template-columns: 1fr auto; gap: .25rem 1rem; padding-block: .6rem .2rem; }
   .main-nav { grid-row: 2; grid-column: 1 / -1; flex-wrap: wrap; gap: 0 1.1rem; }
   .appearance { grid-row: 1; grid-column: 2; }
+  /* No celular o seletor de idioma vira um botão só, com o idioma que dá para escolher. */
+  .appearance { gap: .35rem; }
+  .languages { padding: 0; border: 0; }
+  .languages button[aria-pressed='true'] { display: none; }
+  .languages button { border-color: var(--control-line); }
   .header-layout .brand { overflow-wrap: anywhere; }
   .header-layout .brand-mark { flex-shrink: 0; }
   .hero { grid-template-columns: 1fr; gap: 1.65rem; padding-block: 2.65rem; }
@@ -419,6 +429,7 @@ body { position: relative; isolation: isolate; }
 
 @media (pointer: coarse) {
   .palettes button, .gallery-controls .icon-button { width: 2.75rem; height: 2.75rem; }
+  .languages button { min-width: 2.75rem; height: 2.75rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -427,6 +438,6 @@ body { position: relative; isolation: isolate; }
 }
 
 @media (forced-colors: active) {
-  .palettes button[aria-pressed='true'] { border-color: Highlight; }
+  .palettes button[aria-pressed='true'], .languages button[aria-pressed='true'] { border-color: Highlight; }
   .skill-filter select { appearance: auto; }
 }

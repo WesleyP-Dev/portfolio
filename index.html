@@ -9,12 +9,16 @@
   <title>Portfólio · Projetos e sobre mim</title>
   <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
   <link rel="canonical" href="https://wesleypie.tech/">
+  <link rel="alternate" hreflang="pt-BR" href="https://wesleypie.tech/?lang=pt">
+  <link rel="alternate" hreflang="en" href="https://wesleypie.tech/?lang=en">
+  <link rel="alternate" hreflang="x-default" href="https://wesleypie.tech/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://wesleypie.tech/">
   <meta property="og:title" content="Portfólio · Projetos e sobre mim">
   <meta property="og:description" content="Projetos pessoais, trabalhos da faculdade e aprendizados de desenvolvimento.">
   <meta property="og:image" content="https://wesleypie.tech/assets/og.jpg?v=2">
   <meta property="og:locale" content="pt_BR">
+  <meta property="og:locale:alternate" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
   <script>
     try {
@@ -22,9 +26,15 @@
       if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
       const palette = localStorage.getItem('portfolio-palette');
       if (palette === 'verde') document.documentElement.dataset.palette = palette;
+      // Idioma: ?lang=en no link, depois a escolha salva, depois o idioma do navegador.
+      const asked = new URLSearchParams(location.search).get('lang');
+      const saved = localStorage.getItem('portfolio-lang');
+      const lang = ['pt', 'en'].includes(asked) ? asked : ['pt', 'en'].includes(saved) ? saved : /^pt/i.test(navigator.language) ? 'pt' : 'en';
+      document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR';
     } catch { /* A página continua disponível sem armazenamento. */ }
   </script>
   <link rel="stylesheet" href="./styles.css">
+  <script src="./textos.js" defer></script>
   <script src="./conteudo.js" defer></script>
   <script src="./firebase-config.js" defer></script>
   <script src="./links.js" defer></script>
@@ -34,21 +44,25 @@
 <body>
   <div class="backdrop" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="scroll-progress" aria-hidden="true"></div>
-  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <a class="skip-link" href="#conteudo" data-i18n="skip">Pular para o conteúdo</a>
   <header class="site-header">
     <div class="shell header-layout">
       <a class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true">✳</span> <span data-brand>Portfólio</span></a>
-      <nav class="main-nav" aria-label="Navegação principal">
-        <a href="#inicio" aria-current="location">Início</a>
-        <a href="#projetos">Projetos</a>
-        <a href="#sobre">Sobre mim</a>
-        <a href="#certificados" data-nav-certificates>Certificados</a>
-        <a href="#contato" data-nav-contact>Contato</a>
+      <nav class="main-nav" aria-label="Navegação principal" data-i18n-aria="navLabel">
+        <a href="#inicio" aria-current="location" data-i18n="navHome">Início</a>
+        <a href="#projetos" data-i18n="navProjects">Projetos</a>
+        <a href="#sobre" data-i18n="navAbout">Sobre mim</a>
+        <a href="#certificados" data-nav-certificates data-i18n="navCertificates">Certificados</a>
+        <a href="#contato" data-nav-contact data-i18n="navContact">Contato</a>
       </nav>
       <div class="appearance">
-        <div class="palettes" role="group" aria-label="Paleta de cores">
-          <button type="button" data-palette-option="azul-violeta" aria-label="Azul + violeta suave" aria-pressed="true"></button>
-          <button type="button" data-palette-option="verde" aria-label="Verde" aria-pressed="false"></button>
+        <div class="languages" role="group" aria-label="Idioma" data-i18n-aria="languageLabel">
+          <button type="button" data-language-option="pt" lang="pt-BR" aria-label="Português" aria-pressed="true">PT</button>
+          <button type="button" data-language-option="en" lang="en" aria-label="English" aria-pressed="false">EN</button>
+        </div>
+        <div class="palettes" role="group" aria-label="Paleta de cores" data-i18n-aria="paletteLabel">
+          <button type="button" data-palette-option="azul-violeta" aria-label="Azul + violeta suave" data-i18n-aria="paletteBlue" aria-pressed="true"></button>
+          <button type="button" data-palette-option="verde" aria-label="Verde" data-i18n-aria="paletteGreen" aria-pressed="false"></button>
         </div>
         <button class="theme-toggle" type="button" aria-label="Ativar tema claro"><span class="theme-icon" aria-hidden="true"></span></button>
       </div>
@@ -59,11 +73,11 @@
     <section class="shell hero" id="inicio" aria-labelledby="hero-title">
       <div class="hero-copy" data-reveal>
         <p class="eyebrow"><span aria-hidden="true"></span> <span id="hero-eyebrow">PORTFÓLIO DE PROJETOS</span></p>
-        <h1 id="hero-title">Ideias em<br>construção<span>.</span></h1>
+        <h1 id="hero-title" data-i18n-html="heroTitle">Ideias em<br>construção<span>.</span></h1>
         <p class="hero-intro" id="intro">Um espaço para reunir projetos pessoais, trabalhos da faculdade e o que aprendo construindo cada um deles.</p>
         <div class="hero-actions">
-          <a class="button primary" href="#projetos">Explorar projetos</a>
-          <a class="button secondary" href="#sobre">Sobre mim</a>
+          <a class="button primary" href="#projetos" data-i18n="heroExplore">Explorar projetos</a>
+          <a class="button secondary" href="#sobre" data-i18n="heroAbout">Sobre mim</a>
         </div>
       </div>
       <div class="hero-art" aria-hidden="true" data-reveal>
@@ -76,23 +90,23 @@
       <div class="shell">
         <div class="section-heading" data-reveal>
           <div>
-            <h2 id="project-title" tabindex="-1">Projetos<span>.</span></h2>
+            <h2 id="project-title" tabindex="-1" data-i18n-html="projectsTitle">Projetos<span>.</span></h2>
             <p id="project-intro">Uma seleção demonstrativa de projetos pessoais e acadêmicos.</p>
           </div>
-          <div class="filters" role="group" aria-label="Filtrar por categoria">
-            <button type="button" data-filter="todos" aria-pressed="true" aria-controls="project-grid">Todos</button>
-            <button type="button" data-filter="pessoal" aria-pressed="false" aria-controls="project-grid">Pessoais</button>
-            <button type="button" data-filter="faculdade" aria-pressed="false" aria-controls="project-grid">Faculdade</button>
+          <div class="filters" role="group" aria-label="Filtrar por categoria" data-i18n-aria="filterLabel">
+            <button type="button" data-filter="todos" aria-pressed="true" aria-controls="project-grid" data-i18n="filterAll">Todos</button>
+            <button type="button" data-filter="pessoal" aria-pressed="false" aria-controls="project-grid" data-i18n="filterPersonal">Pessoais</button>
+            <button type="button" data-filter="faculdade" aria-pressed="false" aria-controls="project-grid" data-i18n="filterCollege">Faculdade</button>
           </div>
         </div>
         <p id="project-status" class="visually-hidden" role="status"></p>
         <div class="filter-results" id="project-results">
           <div class="project-grid" id="project-grid"></div>
-          <p id="no-projects" hidden>Nenhum projeto nesta categoria.</p>
-          <nav class="project-pagination" id="project-pagination" aria-label="Páginas de projetos" hidden>
-            <button class="button secondary" type="button" id="previous-project-page" aria-controls="project-grid">Anterior</button>
+          <p id="no-projects" hidden data-i18n="noProjects">Nenhum projeto nesta categoria.</p>
+          <nav class="project-pagination" id="project-pagination" aria-label="Páginas de projetos" data-i18n-aria="pagesLabel" hidden>
+            <button class="button secondary" type="button" id="previous-project-page" aria-controls="project-grid" data-i18n="previous">Anterior</button>
             <p id="project-page-label"></p>
-            <button class="button secondary" type="button" id="next-project-page" aria-controls="project-grid">Próxima</button>
+            <button class="button secondary" type="button" id="next-project-page" aria-controls="project-grid" data-i18n="next">Próxima</button>
           </nav>
         </div>
         <noscript>Ative o JavaScript para ver e filtrar os projetos.</noscript>
@@ -101,43 +115,43 @@
 
     <section class="shell about" id="sobre" aria-labelledby="about-title">
       <div data-reveal>
-        <p class="eyebrow"><span aria-hidden="true"></span> OI, PRAZER!</p>
-        <h2 id="about-title">Sobre mim<span>.</span></h2>
+        <p class="eyebrow"><span aria-hidden="true"></span> <span data-i18n="aboutEyebrow">OI, PRAZER!</span></p>
+        <h2 id="about-title" data-i18n-html="aboutTitle">Sobre mim<span>.</span></h2>
       </div>
       <div class="about-copy" data-reveal>
         <p class="about-lead" id="about-lead">Este é o meu espaço para compartilhar o que construo e aprendo.</p>
         <p id="about-description">Aqui entram um pouco da minha trajetória, o que estou estudando e os tipos de projeto que quero desenvolver.</p>
-        <ul class="social-links" id="social-links" aria-label="Redes profissionais"></ul>
+        <ul class="social-links" id="social-links" aria-label="Redes profissionais" data-i18n-aria="socialLabel"></ul>
       </div>
       <section class="skills" id="tecnologias" aria-labelledby="skills-title" data-reveal hidden>
         <div>
-          <h3 id="skills-title">Tecnologias</h3>
-          <p>Conhecimentos e ferramentas</p>
+          <h3 id="skills-title" data-i18n="skillsTitle">Tecnologias</h3>
+          <p data-i18n="skillsIntro">Conhecimentos e ferramentas</p>
         </div>
         <div>
-          <label class="skill-filter">Filtrar por tipo
+          <label class="skill-filter"><span data-i18n="skillFilter">Filtrar por tipo</span>
             <select id="skill-filter" aria-controls="skill-list"></select>
           </label>
           <p id="skill-status" class="visually-hidden" role="status"></p>
           <div class="filter-results" id="skill-results">
             <ul class="skill-list" id="skill-list"></ul>
-            <p id="no-skills" hidden>Nenhuma tecnologia deste tipo.</p>
+            <p id="no-skills" hidden data-i18n="noSkills">Nenhuma tecnologia deste tipo.</p>
           </div>
         </div>
       </section>
     </section>
     <section class="project-section" id="certificados" aria-labelledby="certificates-title" hidden>
       <div class="shell">
-        <div class="section-heading" data-reveal><h2 id="certificates-title">Certificados<span>.</span></h2></div>
+        <div class="section-heading" data-reveal><h2 id="certificates-title" data-i18n-html="certificatesTitle">Certificados<span>.</span></h2></div>
         <div class="certificate-grid" id="certificate-grid"></div>
       </div>
     </section>
 
     <section class="shell contact" id="contato" aria-labelledby="contact-title" hidden>
       <div class="contact-card" data-reveal>
-        <p class="eyebrow"><span aria-hidden="true"></span> CONTATO</p>
-        <h2 id="contact-title">Vamos conversar<span>?</span></h2>
-        <p>Estou aberto a estágio, projetos freelance e parcerias. Mande uma mensagem pelo e-mail ou pelo LinkedIn.</p>
+        <p class="eyebrow"><span aria-hidden="true"></span> <span data-i18n="contactEyebrow">CONTATO</span></p>
+        <h2 id="contact-title" data-i18n-html="contactTitle">Vamos conversar<span>?</span></h2>
+        <p data-i18n="contactText">Estou aberto a estágio, projetos freelance e parcerias. Mande uma mensagem pelo e-mail ou pelo LinkedIn.</p>
         <div class="hero-actions" id="contact-actions"></div>
         <p id="contact-status" class="contact-status" role="status"></p>
       </div>
@@ -147,7 +161,7 @@
   <footer class="site-footer">
     <div class="shell footer-layout">
       <a class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true">✳</span> <span data-brand>Portfólio</span></a>
-      <div class="footer-links"><a href="./admin.html">Administração</a><a href="#inicio">Voltar ao início</a></div>
+      <div class="footer-links"><a href="./admin.html" data-i18n="admin">Administração</a><a href="#inicio" data-i18n="backToTop">Voltar ao início</a></div>
     </div>
   </footer>
 
@@ -155,12 +169,12 @@
     <div class="dialog-inner">
       <div class="dialog-heading">
         <div id="dialog-category" class="card-meta"></div>
-        <form method="dialog"><button class="icon-button close-button" type="submit" aria-label="Fechar detalhes" autofocus>×</button></form>
+        <form method="dialog"><button class="icon-button close-button" type="submit" aria-label="Fechar detalhes" data-i18n-aria="closeDetails" autofocus>×</button></form>
       </div>
       <h2 id="dialog-title"></h2>
       <div id="dialog-gallery"></div>
       <p id="dialog-description"></p>
-      <ul id="dialog-tags" class="tags" aria-label="Tecnologias"></ul>
+      <ul id="dialog-tags" class="tags" aria-label="Tecnologias" data-i18n-aria="technologies"></ul>
       <div id="dialog-links" class="hero-actions"></div>
     </div>
   </dialog>
