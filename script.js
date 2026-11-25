@@ -362,7 +362,16 @@ function projectCard(project) {
   const title = tr(project, 'titulo');
   content.append(meta, element('h3', '', title), element('p', 'card-summary', tr(project, 'resumo')));
 
+  // No card cabem só as primeiras tecnologias; a lista completa fica nos detalhes.
+  const cardLimit = 5;
   const technologies = technologyItems(project);
+  if (technologies.length > cardLimit + 1) {
+    const hidden = project.tecnologias.slice(cardLimit);
+    const more = element('li', 'tag-more', `+${hidden.length}`);
+    more.title = hidden.join(', ');
+    more.setAttribute('aria-label', t().moreTechnologies(hidden));
+    technologies.splice(cardLimit, Infinity, more);
+  }
   if (technologies.length) {
     const tags = element('ul', 'tags');
     tags.setAttribute('aria-label', t().technologies);
