@@ -292,7 +292,7 @@ h2 { font-size: clamp(2.45rem, 4.3vw, 4rem); line-height: 1.03; letter-spacing: 
 .footer-links { display: flex; flex-wrap: wrap; justify-content: end; gap: 0 1rem; }
 .footer-links a { color: var(--muted); padding-block: .65rem; text-decoration: underline; text-underline-offset: .2em; }
 
-dialog { width: min(42rem, 100% - 2rem); max-height: 90dvh; padding: 0; background: color-mix(in srgb, var(--card) 86%, transparent); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); color: var(--text); border: 1px solid var(--control-line); border-radius: .9rem; }
+dialog { width: min(42rem, 100% - 2rem); max-height: 90dvh; padding: 0; background: color-mix(in srgb, var(--card) 96%, transparent); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); color: var(--text); border: 1px solid var(--control-line); border-radius: .9rem; }
 dialog::backdrop { background: #0b0f1499; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .dialog-inner { padding: clamp(1rem, 4vw, 1.6rem); }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
@@ -305,7 +305,11 @@ dialog::backdrop { background: #0b0f1499; -webkit-backdrop-filter: blur(6px); ba
 .close-button:hover { background: var(--raised); }
 dialog h2 { margin-block: .3rem 1rem; font-size: clamp(1.8rem, 5vw, 2.8rem); overflow-wrap: anywhere; }
 dialog .gallery-frame { border-radius: .55rem; }
-dialog #dialog-description { margin-top: 1rem; color: var(--muted); }
+dialog #dialog-description { margin-top: 1.25rem; color: var(--muted); max-width: 62ch; }
+.rich-text > * + * { margin-top: .85rem; }
+.rich-text ul { display: grid; gap: .45rem; margin-block: .85rem; padding: .85rem 1rem; list-style: none; background: color-mix(in srgb, var(--raised) 55%, transparent); border: 1px solid var(--line); border-radius: .6rem; }
+.rich-text li { position: relative; padding-left: 1.1rem; }
+.rich-text li::before { content: ''; position: absolute; left: 0; top: .62em; width: .4rem; height: .4rem; border-radius: 50%; background: var(--accent); }
 dialog .hero-actions { margin-top: .95rem; }
 dialog .hero-actions:empty { display: none; }
 

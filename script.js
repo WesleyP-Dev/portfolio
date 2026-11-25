@@ -355,13 +355,33 @@ function projectStage(project) {
   return badge;
 }
 
+// Texto simples com estrutura leve: linha em branco separa parágrafos e linhas começando com "-", "*" ou "•"
+// viram lista. Tudo entra como texto (nada de HTML vindo do conteúdo).
+function richText(source) {
+  const nodes = [];
+  let list = null;
+  for (const raw of source.replace(/\r\n?/g, '\n').split('\n')) {
+    const line = raw.trim();
+    const bullet = line.match(/^[-*•]\s+(.*)$/);
+    if (bullet) {
+      if (!list) nodes.push(list = element('ul'));
+      const item = bullet[1].replace(/[;.]$/, '');
+      list.append(element('li', '', item.charAt(0).toLocaleUpperCase(lang) + item.slice(1)));
+      continue;
+    }
+    list = null;
+    if (line) nodes.push(element('p', '', line));
+  }
+  return nodes;
+}
+
 function openProject(project) {
   const badges = projectBadges(project);
   const stage = projectStage(project);
   if (stage) badges.push(stage);
   document.querySelector('#dialog-category').replaceChildren(...badges);
   document.querySelector('#dialog-title').textContent = tr(project, 'titulo');
-  document.querySelector('#dialog-description').textContent = tr(project, 'descricao') || tr(project, 'resumo');
+  document.querySelector('#dialog-description').replaceChildren(...richText(tr(project, 'descricao') || tr(project, 'resumo')));
 
   const projectGallery = gallery(project, false);
   document.querySelector('#dialog-gallery').replaceChildren(...(projectGallery ? [projectGallery] : []));
