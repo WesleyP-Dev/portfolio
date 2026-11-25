@@ -297,6 +297,11 @@ dialog::backdrop { background: #0b0f1499; -webkit-backdrop-filter: blur(6px); ba
 .dialog-inner { padding: clamp(1rem, 4vw, 1.6rem); }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .dialog-heading form { flex-shrink: 0; }
+.close-button { position: relative; }
+/* O "×" é desenhado com duas barras para ficar no centro exato em qualquer fonte. */
+.close-button::before, .close-button::after { content: ''; position: absolute; top: 50%; left: 50%; width: 1.05rem; height: 2px; border-radius: 1px; background: currentColor; }
+.close-button::before { transform: translate(-50%, -50%) rotate(45deg); }
+.close-button::after { transform: translate(-50%, -50%) rotate(-45deg); }
 .close-button:hover { background: var(--raised); }
 dialog h2 { margin-block: .3rem 1rem; font-size: clamp(1.8rem, 5vw, 2.8rem); overflow-wrap: anywhere; }
 dialog .gallery-frame { border-radius: .55rem; }
@@ -440,6 +445,7 @@ body { position: relative; isolation: isolate; }
 }
 
 @media (forced-colors: active) {
+  .close-button::before, .close-button::after { forced-color-adjust: none; background: ButtonText; }
   .palettes button[aria-pressed='true'], .languages button[aria-pressed='true'] { border-color: Highlight; }
   .skill-filter select { appearance: auto; }
 }
