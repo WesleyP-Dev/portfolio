@@ -228,6 +228,7 @@ h2 { font-size: clamp(2.45rem, 4.3vw, 4rem); line-height: 1.03; letter-spacing: 
 .card-summary { max-width: 62ch; color: var(--muted); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 .tags { display: flex; flex-wrap: wrap; gap: .4rem; margin: .9rem 0 .65rem; padding: 0; list-style: none; }
 .tags li { padding: .17rem .5rem; background: var(--raised); border: 1px solid var(--line); border-radius: .33rem; color: var(--muted); font-size: .8125rem; }
+.project-card .card-summary { min-height: 3lh; }
 .tags .tag-more { border-style: dashed; color: var(--accent); font-weight: 700; cursor: help; }
 .details { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem; margin-top: auto; padding: 0; border: 0; background: transparent; color: var(--accent); font-size: .9375rem; font-weight: 700; }
 .details:hover { text-decoration: underline; text-underline-offset: .2em; }

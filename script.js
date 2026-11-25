@@ -296,6 +296,36 @@ function gallery(project, lazy = true) {
   return figure;
 }
 
+// No card as tecnologias ocupam uma linha só, para todos os cards terem a mesma altura. O que não couber
+// vira um "+N" (com os nomes no title); a lista completa fica nos detalhes do projeto.
+const tagRows = new ResizeObserver((entries) => {
+  for (const { target, contentRect } of entries) {
+    if (target.isConnected && contentRect.width !== target.fittedWidth) fitTags(target);
+  }
+});
+
+function fitTags(list) {
+  list.fittedWidth = list.getBoundingClientRect().width;
+  const items = [...list.children].filter((item) => !item.classList.contains('tag-more'));
+  const more = list.querySelector('.tag-more');
+  for (const item of items) item.hidden = false;
+  more.hidden = true;
+  const firstRow = items[0].offsetTop;
+  if (items.at(-1).offsetTop === firstRow) return;
+  more.hidden = false;
+  let shown = items.length;
+  const update = () => {
+    const names = items.slice(shown).map((item) => item.textContent);
+    more.textContent = `+${names.length}`;
+    more.title = names.join(', ');
+    more.setAttribute('aria-label', t().moreTechnologies(names));
+  };
+  do {
+    items[--shown].hidden = true;
+    update();
+  } while (shown > 1 && more.offsetTop !== firstRow);
+}
+
 function technologyItems(project) {
   return (project.tecnologias ?? []).map((name) => element('li', '', name));
 }
@@ -362,21 +392,15 @@ function projectCard(project) {
   const title = tr(project, 'titulo');
   content.append(meta, element('h3', '', title), element('p', 'card-summary', tr(project, 'resumo')));
 
-  // No card cabem só as primeiras tecnologias; a lista completa fica nos detalhes.
-  const cardLimit = 5;
   const technologies = technologyItems(project);
-  if (technologies.length > cardLimit + 1) {
-    const hidden = project.tecnologias.slice(cardLimit);
-    const more = element('li', 'tag-more', `+${hidden.length}`);
-    more.title = hidden.join(', ');
-    more.setAttribute('aria-label', t().moreTechnologies(hidden));
-    technologies.splice(cardLimit, Infinity, more);
-  }
   if (technologies.length) {
     const tags = element('ul', 'tags');
     tags.setAttribute('aria-label', t().technologies);
-    tags.append(...technologies);
+    const more = element('li', 'tag-more');
+    more.hidden = true;
+    tags.append(...technologies, more);
     content.append(tags);
+    tagRows.observe(tags);
   }
 
   const details = element('button', 'details', t().details);
